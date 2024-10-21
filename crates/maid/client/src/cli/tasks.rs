@@ -21,7 +21,7 @@ pub fn json(path: &String, args: &Vec<String>, hydrate: &bool) {
 
 pub struct List;
 impl List {
-    pub fn all(path: &String, silent: bool, log_level: Option<log::Level>) {
+    pub fn all(path: &String, silent: bool, log_level: Option<log::Level>, force: bool) {
         let values = helpers::maidfile::merge(path);
         let mut options: Vec<_> = values
             .tasks
@@ -60,8 +60,9 @@ impl List {
         match Select::new("Select a task to run:", options).prompt() {
             Ok(task) => {
                 log::debug!("Starting {}", task.name);
-                cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, false, log_level);
+                cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, false, log_level, force);
             }
+
             Err(_) => println!("{}", "Aborting...".white()),
         }
     }
@@ -99,8 +100,9 @@ impl List {
         match Select::new("Select a remote task to run:", options).prompt() {
             Ok(task) => {
                 log::debug!("Starting {}", task.name);
-                cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, true, log_level);
+                cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, true, log_level, false);
             }
+
             Err(_) => println!("{}", "Aborting...".white()),
         }
     }

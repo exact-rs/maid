@@ -7,7 +7,7 @@ import = [
 
 [project]
 name = "maid"
-version = "1.2.0"
+version = "1.2.1"
 
 # build on a remote server
 [project.server]
@@ -20,7 +20,7 @@ BOOL = false
 STRING = 'test'
 TYPE = '%{dir.home} %{env.STRING} %{arg.1}'
 ARR = ['hello', 'world']
-VERSION='1.2.0'
+VERSION='1.2.1'
 
 [tasks.build]
 info = "Build binaries"
@@ -52,4 +52,4 @@ pull = "bin"
 [tasks]
 api_server = { depends = ["build"], script = "./maid_server", path = "bin" }
 clean = { info = "Clean binary files", script = ["rm -rf bin", "mkdir bin"] }
-install = { info = "Move binary file", script = ["sudo cp bin/maid /usr/local/bin", "echo Copied binary!"], depends = ["build"] }
+install = { info = "Move binary file", script = ["maid build -q","sudo cp bin/maid /usr/local/bin", "echo Copied binary!"] }

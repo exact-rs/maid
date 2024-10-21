@@ -95,7 +95,7 @@ fn read_file(path: PathBuf, kind: &str) -> Maidfile {
         "toml" => toml::from_str(&contents).map_err(|err| string!(err)),
         "json" => serde_json::from_str(&contents).map_err(|err| string!(err)),
         "json5" => json5::from_str(&contents).map_err(|err| string!(err)),
-        "yaml" => serde_yaml::from_str(&contents).map_err(|err| string!(err)),
+        "yaml" | "yml" => serde_yaml::from_str(&contents).map_err(|err| string!(err)),
         _ => {
             log::warn!("Invalid format");
             crashln!("Cannot read maidfile.");

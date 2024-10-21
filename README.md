@@ -1,3 +1,7 @@
+> [!WARNING]
+>
+> ## This project is going through a full rewrite, any previous version may contain unknown and unfixed bugs.
+
 <p align="center"><img style="width: 300px;" src="https://cdn.justjs.dev/assets/svg/maid_title.svg" /></p>
 
 ##
@@ -41,5 +45,3 @@ Pre-built binaries for Linux, MacOS, and Windows can be found on the [releases](
 - Check if you have cargo (Rust's package manager) installed, just type in `cargo`
 - If cargo is installed, run `cargo build --release`
 - Put the executable into one of your PATH entries
-  - Linux: usually /bin/ or /usr/bin/
-  - Windows: C:\Windows\System32 is good for it but don't use windows

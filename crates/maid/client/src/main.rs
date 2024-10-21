@@ -21,6 +21,8 @@ struct Cli {
     task: Vec<String>,
     #[arg(global = true, short, long, default_value_t = String::from("maidfile"), help = "maidfile path")]
     path: String,
+    #[arg(short, long, help = "force rebuild")]
+    force: bool,
     #[command(subcommand)]
     command: Option<Commands>,
     #[clap(flatten)]
@@ -88,14 +90,14 @@ fn main() {
             Butler::Init => cli::butler::init(),
             Butler::Watch => cli::butler::watch(Path::new("src")),
             Butler::Update => cli::butler::update(),
-            Butler::Tasks => cli::tasks::List::all(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level()),
+            Butler::Tasks => cli::tasks::List::all(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level(), cli.force),
         },
         Some(Commands::Remote { task, server }) => match server {
             Some(Remote::Connect) => server::cli::connect(&cli.path),
             Some(Remote::Clean) => server::cli::connect(&cli.path),
             Some(Remote::List) => cli::tasks::List::remote(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level()),
-            None => cli::exec(task[0].trim(), &task, &cli.path, cli.verbose.is_silent(), false, true, cli.verbose.log_level()),
+            None => cli::exec(task[0].trim(), &task, &cli.path, cli.verbose.is_silent(), false, true, cli.verbose.log_level(), false),
         },
-        None => cli::exec(cli.task[0].trim(), &cli.task, &cli.path, cli.verbose.is_silent(), false, false, cli.verbose.log_level()),
+        None => cli::exec(cli.task[0].trim(), &cli.task, &cli.path, cli.verbose.is_silent(), false, false, cli.verbose.log_level(), cli.force),
     }
 }

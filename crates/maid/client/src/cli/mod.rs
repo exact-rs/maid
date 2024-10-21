@@ -47,14 +47,14 @@ pub fn info(path: &String) {
     );
 }
 
-pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<log::Level>) {
+pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<log::Level>, force: bool) {
     log::info!("Starting maid {}", env!("CARGO_PKG_VERSION"));
 
     if task.is_empty() {
         if is_remote {
             tasks::List::remote(path, silent, log_level);
         } else {
-            tasks::List::all(path, silent, log_level);
+            tasks::List::all(path, silent, log_level, force);
         }
     } else {
         let values = helpers::maidfile::merge(path);
@@ -89,7 +89,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                     for (index, item) in deps.iter().enumerate() {
                         pb.set_prefix(format!("[{}/{}]", index + 1, deps.len()));
                         pb.set_message(fmtstr!("{} {item}", "running dependency".bright_yellow()));
-                        exec(&item, args, path, true, true, is_remote, log_level);
+                        exec(&item, args, path, true, true, is_remote, log_level, force);
                     }
 
                     if !is_dep {
@@ -152,7 +152,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                 Err(err) => crashln!("Cannot read cache config: {err}"),
             };
 
-            if json.hash == hash && !is_dep {
+            if json.hash == hash && !is_dep && !force {
                 println!("{}", "skipping task due to cached files".bright_magenta());
 
                 for target in cache.target.clone() {
