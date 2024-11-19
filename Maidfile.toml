@@ -11,8 +11,12 @@ version = "2.0.0"
 
 # Build on a remote server
 [project.server]
-address = { host = "localhost", port = 3500, ssl = false }
 token = "test_token1"
+address = { 
+   host = "localhost",
+   port = 3500,
+   ssl = false
+}
 
 # Global environment (applied to shell)
 [env]
@@ -20,31 +24,39 @@ BOOL = false
 STRING = 'test'
 TYPE = '%{dir.home} %{env.STRING} %{arg.1}'
 ARR = ['hello', 'world']
-VERSION='1.2.1'
+VERSION='2.0.0'
 
+# Advanced task definition 
 [tasks.build]
 info = "Build binaries"
 depends = ["clean"]
 script = [
-   "cargo zigbuild --release --color always", 
+   "cargo zigbuild --release --all-features --color always", 
    "mv target/release/maid bin/maid",
    "mv target/release/maid-server bin/maid-server",
 ]
 
+# Build cache
 [tasks.build.cache]
 path = "maid"
 target = ["bin/maid", "bin/maid-server"]
 
-# [tasks.build.remote]
-# silent = false
-# exclusive = false
-# shell = "/bin/bash"
-# image = "messense/cargo-zigbuild:latest"
-# push = ["crates", "Cargo.toml", "Cargo.lock"]
-# pull = "bin"
+# Remote build target
+[tasks.build.remote]
+silent = false
+exclusive = false
+shell = "/bin/bash"
+image = "messense/cargo-zigbuild:latest"
+push = ["maid", "build", "Cargo.toml", "Cargo.lock"]
+pull = "bin"
 
 # Basic task definition 
 [tasks]
-api_server = { depends = ["build"], script = "./maid_server", path = "bin" }
-clean = { info = "Clean binary files", script = ["rm -rf bin", "mkdir bin"] }
-install = { info = "Move binary file", script = ["maid build -q","sudo cp bin/maid /usr/local/bin", "maid -V"] }
+clean.script = ["rm -rf bin", "mkdir bin"]
+install.script =["maid build -q","sudo cp bin/maid /usr/local/bin", "maid -V"]
+
+api_server = { 
+   path = "bin",
+   depends = ["build"], 
+   script = "./maid_server"
+}
