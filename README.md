@@ -1,8 +1,8 @@
-> [!WARNING]
->
-> ## This project is going through a full rewrite, any previous version may contain unknown and unfixed bugs.
+> [!CAUTION]
+> # This project is going through a full rewrite.
+> Any previous version may contain unknown and unfixed bugs.
 
-<p align="center"><img style="width: 300px;" src="https://cdn.justjs.dev/assets/svg/maid_title.svg" /></p>
+<p align="center"><img style="width: 350px;" src="https://maid.ci/images/maid_title.svg?v=2" /></p>
 
 ##
 
