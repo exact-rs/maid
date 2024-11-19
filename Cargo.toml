@@ -19,7 +19,7 @@ path = "maid/server/main.rs"
 required-features = ["server"]
 
 [features]
-default = ["client"]
+default = ["client", "server"]
 
 client = [
    "dep:url", 

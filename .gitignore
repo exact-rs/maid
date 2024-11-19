@@ -1,15 +1,21 @@
-# misc
+# src
 target
-TODO.md
+tests
 bin
-.idea
-build
-testing
-.in
-
-# prevent duplicate README
-crates/maid/client/README.md
 
 # maid
 .maid/cache
 .maid/temp
+
+# environment variables
+.env
+.env.production
+
+# todo
+*.todo
+TODO.md
+
+# jetbrains
+.idea
+.fleet
+test
