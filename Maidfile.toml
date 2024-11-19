@@ -1,20 +1,20 @@
-# import tasks and enviroment from other files
+# Import tasks and environment from other files
 import = [
-   "scripts/build.toml", 
-   "scripts/test.toml",
-   "scripts/publish.toml"
+   "build/scripts/build.toml", 
+   "build/scripts/test.toml",
+   "build/scripts/publish.toml"
 ]
 
 [project]
 name = "maid"
-version = "1.2.1"
+version = "2.0.0"
 
-# build on a remote server
+# Build on a remote server
 [project.server]
 address = { host = "localhost", port = 3500, ssl = false }
 token = "test_token1"
 
-# global enviroment
+# Global environment (applied to shell)
 [env]
 BOOL = false
 STRING = 'test'
@@ -28,23 +28,23 @@ depends = ["clean"]
 script = [
    "cargo zigbuild --release --color always", 
    "mv target/release/maid bin/maid",
-   "mv target/release/maid_server bin/maid_server"
+   "mv target/release/maid-server bin/maid-server",
 ]
 
 [tasks.build.cache]
-path = "crates"
-target = ["bin/maid", "bin/exit_test"]
+path = "maid"
+target = ["bin/maid", "bin/maid-server"]
 
-[tasks.build.remote]
-silent = false
-exclusive = false
-shell = "/bin/bash"
-image = "messense/cargo-zigbuild:latest"
-push = ["crates", "Cargo.toml", "Cargo.lock"]
-pull = "bin"
+# [tasks.build.remote]
+# silent = false
+# exclusive = false
+# shell = "/bin/bash"
+# image = "messense/cargo-zigbuild:latest"
+# push = ["crates", "Cargo.toml", "Cargo.lock"]
+# pull = "bin"
 
-# basic task definition 
+# Basic task definition 
 [tasks]
 api_server = { depends = ["build"], script = "./maid_server", path = "bin" }
 clean = { info = "Clean binary files", script = ["rm -rf bin", "mkdir bin"] }
-install = { info = "Move binary file", script = ["maid build -q","sudo cp bin/maid /usr/local/bin", "echo Copied binary!"] }
+install = { info = "Move binary file", script = ["maid build -q","sudo cp bin/maid /usr/local/bin", "maid -V"] }
