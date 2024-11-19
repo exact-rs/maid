@@ -1,8 +1,8 @@
 [package]
 name = "maid"
-license = "MIT"
 version = "2.0.0"
 edition = "2021"
+license = "BSL-1.1"
 
 build = "build/attribute.rs"
 repository = "https://github.com/exact-rs/maid"
