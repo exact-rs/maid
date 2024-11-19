@@ -28,17 +28,12 @@ depends = ["clean"]
 script = [
    "cargo zigbuild --release --color always", 
    "mv target/release/maid bin/maid",
-   "mv target/release/maid_server bin/maid_server",
-   "mv target/release/exit_test bin/exit_test"
+   "mv target/release/maid_server bin/maid_server"
 ]
 
 [tasks.build.cache]
 path = "crates"
-target = [
-   "bin/maid", 
-   "bin/exit_test", 
-   "bin/maid_server"
-]
+target = ["bin/maid", "bin/exit_test"]
 
 [tasks.build.remote]
 silent = false
