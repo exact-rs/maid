@@ -6,7 +6,7 @@ license = "BSL-1.1"
 
 build = "build/attribute.rs"
 repository = "https://github.com/exact-rs/maid"
-description = "🔨 An easy to use make alternative."
+description = "🔨 A comprehensive build tool for all your needs."
 
 [[bin]]
 name = "maid"

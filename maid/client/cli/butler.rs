@@ -7,9 +7,9 @@ use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 use std::{fs::File, io::Write, path::Path, time::Duration};
 
-fn create_error(name: &str) {
+fn create_error(name: &str, path: &str) {
     println!("An error happened when asking for {name}, try again later.");
-    std::fs::remove_file("maidfile").unwrap();
+    std::fs::remove_file(path).unwrap();
     std::process::exit(1);
 }
 
@@ -27,13 +27,13 @@ pub fn watch(path: &Path) {
 
 pub fn update() { println!("check and retrive updates") }
 
-pub fn init() {
+pub fn init(path: String) {
     let example_maidfile = "[tasks.example]\ninfo = \"this is a comment\"\nscript = \"echo 'hello world'\"";
 
-    if !helpers::Exists::file(string!("maidfile")).unwrap() {
+    if !helpers::Exists::file(path.to_owned()).unwrap() {
         println!("This utility will walk you through creating a maidfile.\n");
 
-        let mut file = File::create("maidfile").unwrap();
+        let mut file = File::create(&path).unwrap();
         let current_dir = std::env::current_dir().unwrap();
         writeln!(&mut file, "[project]").unwrap();
 
@@ -42,11 +42,11 @@ pub fn init() {
 
         match name {
             Ok(name) => writeln!(&mut file, "name = \"{name}\"").unwrap(),
-            Err(_) => create_error("project name"),
+            Err(_) => create_error("project name", &path),
         }
         match version {
             Ok(version) => writeln!(&mut file, "version = \"{version}\"").unwrap(),
-            Err(_) => create_error("version"),
+            Err(_) => create_error("version", &path),
         }
 
         writeln!(&mut file, "\n{example_maidfile}").unwrap();

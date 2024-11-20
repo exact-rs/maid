@@ -12,11 +12,7 @@ version = "2.0.0"
 # Build on a remote server
 [project.server]
 token = "test_token1"
-address = { 
-   host = "localhost",
-   port = 3500,
-   ssl = false
-}
+address = { host = "localhost", port = 3500, ssl = false }
 
 # Global environment (applied to shell)
 [env]
@@ -31,7 +27,8 @@ VERSION='2.0.0'
 info = "Build binaries"
 depends = ["clean"]
 script = [
-   "cargo zigbuild --release --all-features --color always", 
+   "cargo zigbuild --release --no-default-features --features client --color always", 
+   # "cargo zigbuild --release --all-features --color always", 
    "mv target/release/maid bin/maid",
    "mv target/release/maid-server bin/maid-server",
 ]
@@ -54,9 +51,4 @@ pull = "bin"
 [tasks]
 clean.script = ["rm -rf bin", "mkdir bin"]
 install.script =["maid build -q","sudo cp bin/maid /usr/local/bin", "maid -V"]
-
-api_server = { 
-   path = "bin",
-   depends = ["build"], 
-   script = "./maid_server"
-}
+api_server = { path = "bin", depends = ["build"], script = "./maid_server" }
