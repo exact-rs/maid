@@ -27,7 +27,9 @@ pub fn watch(path: &Path) {
 
 pub fn update() { println!("check and retrive updates") }
 
-pub fn init(path: String) {
+pub fn init() {
+    let path = "maidfile";
+    
     let example_maidfile = "[tasks.example]\ninfo = \"this is a comment\"\nscript = \"echo 'hello world'\"";
 
     if !helpers::Exists::file(path.to_owned()).unwrap() {

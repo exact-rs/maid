@@ -9,7 +9,7 @@ use inquire::Select;
 use macros_rs::{string, ternary};
 use text_placeholder::Template;
 
-pub fn json(path: &String, args: &Vec<String>, hydrate: &bool) {
+pub fn json(path: &String, args: &Vec<String>, hydrate: bool) {
     let values = helpers::maidfile::merge(path);
     let project_root = parse::file::find_maidfile_root(path);
     let json = values.clone().to_json();

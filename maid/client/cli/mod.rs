@@ -18,7 +18,7 @@ pub fn get_version(short: bool) -> String {
     };
 }
 
-pub fn info(path: &String) {
+pub fn info(path: &String) {    
     let values = helpers::maidfile::merge(path);
     let project_root = parse::file::find_maidfile_root(path);
 

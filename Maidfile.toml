@@ -29,14 +29,15 @@ depends = ["clean"]
 script = [
    "cargo zigbuild --release --no-default-features --features client --color always", 
    # "cargo zigbuild --release --all-features --color always", 
-   "mv target/release/maid bin/maid",
-   "mv target/release/maid-server bin/maid-server",
+   "cp target/release/maid bin/maid",
+   # "cp target/release/maid-server bin/maid-server",
 ]
 
 # Build cache
 [tasks.build.cache]
 path = "maid"
-target = ["bin/maid", "bin/maid-server"]
+# target = ["bin/maid", "bin/maid-server"]
+target = ["bin/maid"]
 
 # Remote build target
 [tasks.build.remote]
