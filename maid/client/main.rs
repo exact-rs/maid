@@ -54,7 +54,7 @@ struct Cli {
     list: bool,
     
     /// Watch for changes in specified path 
-    #[arg(short, long)]
+    #[arg(short = 'W', long)]
     watch: Option<String>,
     
     /// View Maid health (server health if enabled)
@@ -83,14 +83,16 @@ enum System {
     Update,
     /// Return the Maidfile in json
     Json,
-    /// Hydrate json output with environment
-    HydrateJson,
+    /// Hydrate json with environment fields
+    JsonHydrated,
 }
 
 #[derive(ValueEnum, Clone)]
 enum Project {
-    /// Get Project Info
+    /// Retrieve project metadata
     Info,
+    /// Display current defined environment
+    Env,
 }
 
 fn main() {
@@ -119,6 +121,7 @@ fn main() {
     if let Some(project) = cli.project {
         return match project {
             Project::Info => cli::info(&cli.path), // add more info
+            Project::Env => {}, // print env from maidfile
         };
     }
     
@@ -126,7 +129,7 @@ fn main() {
         return match system {
             System::Update => cli::butler::update(), // add real update checker
             System::Json => cli::tasks::json(&cli.path, &cli.task, false),
-            System::HydrateJson => cli::tasks::json(&cli.path, &cli.task, true),
+            System::JsonHydrated => cli::tasks::json(&cli.path, &cli.task, true),
         };
     }
     
