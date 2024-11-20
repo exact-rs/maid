@@ -1,7 +1,6 @@
 use crate::parse;
 use crate::structs::{DisplayTask, Maidfile};
-
-use macros_rs::crashln;
+use maid::log::prelude::*;
 
 pub fn merge(path: &String) -> Maidfile {
     let mut values = parse::file::read_maidfile(path);
@@ -10,10 +9,7 @@ pub fn merge(path: &String) -> Maidfile {
     for import in imported_values.iter() {
         values = match merge_struct::merge(&values, &import) {
             Ok(merge) => merge,
-            Err(err) => {
-                log::warn!("{err}");
-                crashln!("Unable to import tasks.");
-            }
+            Err(err) => error!(%err, "Unable to import tasks"),
         };
     }
 
@@ -24,10 +20,7 @@ impl Maidfile {
     pub fn to_json(&self) -> String {
         match serde_json::to_string(&self) {
             Ok(contents) => contents,
-            Err(err) => {
-                log::warn!("{err}");
-                crashln!("Cannot read maidfile.");
-            }
+            Err(err) => error!(%err, "Cannot read Maidfile"),
         }
     }
 }

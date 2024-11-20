@@ -1,14 +1,14 @@
+use maid::log::prelude::*;
+
 use crate::cli;
 use crate::helpers;
 use crate::shell::IntoArgs;
 use crate::structs::{Cache, Runner};
 use crate::table;
 
-use colored::Colorize;
 use fs_extra::dir::get_size;
 use human_bytes::human_bytes;
 use macros_rs::{crashln, string};
-use serde_json::json;
 use std::env;
 use std::io::Error;
 use std::path::Path;
@@ -32,42 +32,28 @@ fn run_script(runner: Runner) {
                 args.remove(0);
                 (result[0].clone(), args)
             }
-            Err(err) => {
-                log::warn!("{err}");
-                crashln!("Script could not be parsed into args");
-            }
+            Err(err) => error!(%err, "Script could not be parsed into args"),
         };
 
-        log::debug!("Original Script: {}", string);
-        log::debug!("Parsed Script: {}", script);
-        log::trace!("{}", json!({"name": name, "args": args}));
-        log::info!("Execute Command: '{name} {}'", args.join(" "));
+        debug!("Original Script: {}", string);
+        debug!("Parsed Script: {}", script);
+        debug!("Execute Command: '{name} {}'", args.join(" "));
 
         let working_dir = runner.project.join(&Path::new(runner.path));
         match env::set_current_dir(&working_dir) {
-            Ok(_) => {
-                log::info!("Working directory: {:?}", &working_dir);
-            }
-            Err(err) => {
-                crashln!("Failed to set working directory {:?}\nError: {:#?}", &working_dir, err);
-            }
+            Ok(_) => debug!("Working directory: {:?}", &working_dir),
+            Err(err) => error!(%err, "Failed to set working directory {:?}", &working_dir),
         };
 
         if runner.is_dep {
             cmd = match Command::new(&name).stdout(Stdio::null()).stderr(Stdio::null()).stdin(Stdio::null()).args(args.clone()).spawn() {
                 Ok(output) => output,
-                Err(err) => {
-                    log::warn!("{err}");
-                    crashln!("Cannot start command {name}.");
-                }
+                Err(err) => error!(%err, "Cannot start command {name}."),
             };
         } else {
             cmd = match Command::new(&name).args(args.clone()).stdout(Stdio::inherit()).stderr(Stdio::inherit()).stdin(Stdio::inherit()).spawn() {
                 Ok(output) => output,
-                Err(err) => {
-                    log::warn!("{err}");
-                    crashln!("Cannot start command {name}.");
-                }
+                Err(err) => error!(%err, "Cannot start command {name}."),
             };
         }
 
@@ -75,12 +61,12 @@ fn run_script(runner: Runner) {
         let exit_code = helpers::status::code(&status);
 
         status_array.push(status);
-        log::debug!("Finished cmd: '{name} {}' with exit code: {:?} in {:.2?}", args.join(" "), exit_code, start.elapsed());
+        debug!("Finished cmd: '{name} {}' with exit code: {:?} in {:.2?}", args.join(" "), exit_code, start.elapsed());
     }
 
     let status = match status_array.last() {
         Some(status) => status,
-        None => crashln!("Failed to fetch final status code."),
+        None => error!("Failed to fetch final status code."),
     };
 
     let cache = match &runner.maidfile.tasks[runner.name].cache {
@@ -93,7 +79,7 @@ fn run_script(runner: Runner) {
 
     if !runner.silent {
         if success {
-            println!("\n{} {}", helpers::string::check_icon(), "finished task successfully".bright_green());
+            println!("\n{} {}", maid::colors::OK, "finished task successfully".bright_green());
             if !cache.path.trim().is_empty() && !cache.target.is_empty() {
                 for target in cache.target {
                     let cache_file = format!(".maid/cache/{}/target/{}", runner.name, Path::new(&target).file_name().unwrap().to_str().unwrap());
@@ -104,19 +90,15 @@ fn run_script(runner: Runner) {
                                 format!("saved target '{}' to cache", target).bright_magenta(),
                                 format!("{}", human_bytes(get_size(cache_file.clone()).unwrap() as f64).white())
                             );
-                            log::debug!("saved target file {}", target)
+                            debug!("saved target file {}", target)
                         }
-                        Err(err) => {
-                            log::warn!("{err}");
-                            log::debug!("path: {}", target);
-                            crashln!("Cannot save target file.");
-                        }
+                        Err(err) => error!(%err, target, "Cannot save target file"),
                     };
                 }
             }
             println!("{} took {}", runner.name.white(), format!("{:.2?}", start.elapsed()).yellow());
         } else {
-            println!("\n{} {} {}", helpers::string::cross_icon(), "exited with status code".bright_red(), format!("{}", exit_code).red());
+            println!("\n{} {} {}", maid::colors::FAIL, "exited with status code".bright_red(), format!("{}", exit_code).red());
             println!("{} took {}", runner.name.white(), format!("{:.2?}", start.elapsed()).yellow());
         }
     } else {
@@ -127,15 +109,12 @@ fn run_script(runner: Runner) {
                     match std::fs::copy(Path::new(&target), cache_file.clone()) {
                         Ok(_) => println!(
                             "{} {}{}{}",
-                            helpers::string::add_icon(),
+                            maid::colors::ADD,
                             format!("{}", target).bright_green(),
-                            helpers::string::seperator(),
+                            maid::colors::SEP,
                             format!("{}", human_bytes(get_size(cache_file.clone()).unwrap() as f64).bright_cyan())
                         ),
-                        Err(err) => {
-                            log::error!("{err}");
-                            log::debug!("path: {}", target);
-                        }
+                        Err(err) => warn!(%err, %target, "Cache miss"),
                     };
                 }
             }

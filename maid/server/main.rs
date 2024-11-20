@@ -7,6 +7,7 @@ mod table;
 use bollard::{Docker, API_DEFAULT_VERSION};
 use docker::container;
 use macros_rs::{fmtstr, ternary};
+use maid::log::prelude::*;
 use rocket::futures::SinkExt;
 use rocket::{get, http::Status, launch, outcome::Outcome, routes, State};
 use rocket_ws::{Channel, Message, WebSocket};
@@ -136,8 +137,8 @@ fn stream(ws: WebSocket, docker_state: &State<DockerState>, _token: Token) -> Ch
             stream.send(connect_success.into()).await?;
 
             match docker::run::exec(stream, &docker_state.docker).await {
-                Ok(_) => log::info!("build finished"),
-                Err(_) => log::error!("failed to build"),
+                Ok(_) => info!("build finished"),
+                Err(_) => warn!("failed to build"),
             };
 
             Ok(())

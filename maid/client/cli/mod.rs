@@ -1,5 +1,4 @@
-pub(crate) mod verbose;
-pub(crate) mod butler;
+pub(crate) mod dispatch;
 pub(crate) mod run;
 pub(crate) mod tasks;
 
@@ -9,7 +8,8 @@ use crate::server;
 use crate::structs::{Cache, CacheConfig, Task};
 use crate::task;
 
-use colored::Colorize;
+use maid::log::prelude::*;
+
 use fs_extra::dir::get_size;
 use global_placeholders::global;
 use human_bytes::human_bytes;
@@ -23,7 +23,7 @@ pub fn get_version(short: bool) -> String {
     };
 }
 
-pub fn info(path: &String) {    
+pub fn info(path: &String) {
     let values = helpers::maidfile::merge(path);
     let project_root = parse::file::find_maidfile_root(path);
 
@@ -52,8 +52,8 @@ pub fn info(path: &String) {
     );
 }
 
-pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<log::Level>, force: bool) {
-    log::info!("Starting maid {}", env!("CARGO_PKG_VERSION"));
+pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<tracing::Level>, force: bool) {
+    debug!("Starting maid {}", env!("CARGO_PKG_VERSION"));
 
     if task.is_empty() {
         if is_remote {
@@ -101,7 +101,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                         pb.suspend(|| {
                             println!(
                                 "{} {} in {} {}\n",
-                                helpers::string::check_icon(),
+                                maid::colors::OK,
                                 format!("finished {} {}", deps.len(), ternary!(deps.len() > 1, "dependencies", "dependency")).bright_green(),
                                 format!("{:.2?}", start.elapsed()).yellow(),
                                 format!("[{}]", deps.join(", ")).white()
@@ -127,7 +127,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
         if !cache.path.trim().is_empty() && !cache.target.is_empty() && !is_remote {
             if !helpers::Exists::folder(global!("maid.cache_dir", task)).unwrap() {
                 std::fs::create_dir_all(global!("maid.cache_dir", task)).unwrap();
-                log::debug!("created maid cache dir");
+                debug!("created maid cache dir");
             }
 
             let hash = task::cache::create_hash(&cache.path);
@@ -142,7 +142,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                     })
                     .unwrap(),
                 ) {
-                    Ok(_) => log::debug!("created {task} cache config"),
+                    Ok(_) => debug!("created {task} cache config"),
                     Err(err) => crashln!("error {err} creating cache config"),
                 };
             }
@@ -170,11 +170,8 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                     );
 
                     match std::fs::copy(Path::new(&cache_file), target.clone()) {
-                        Ok(_) => log::debug!("copied target file {}", target),
-                        Err(err) => {
-                            log::warn!("{err}");
-                            crashln!("Cannot copy target file.");
-                        }
+                        Ok(_) => debug!("copied target file {}", target),
+                        Err(err) => error!(%err, "Cannot copy target file."),
                     };
                 }
 
@@ -188,23 +185,23 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                     })
                     .unwrap(),
                 ) {
-                    Ok(_) => log::debug!("added hash for {task} -> {hash}"),
-                    Err(err) => crashln!("error {err} creating cache config"),
+                    Ok(_) => debug!("added hash for {task} -> {hash}"),
+                    Err(err) => error!(%err, "error creating cache config"),
                 };
             }
         };
 
-        log::debug!("Is remote?: {is_remote}");
-        log::debug!("Project dir: {:?}", project_root);
-        log::debug!("Task path: {task_path}");
-        log::debug!("Working dir: {cwd}");
-        log::debug!("Started task: {task}");
+        debug!("Is remote?: {is_remote}");
+        debug!("Project dir: {:?}", project_root);
+        debug!("Task path: {task_path}");
+        debug!("Working dir: {cwd}");
+        debug!("Started task: {task}");
 
         if !silent && !is_remote {
             ternary!(
                 task_path == helpers::string::path_to_str(project_root.as_path()) || task_path == "%{dir.current}" || task_path == "." || task_path == *cwd,
-                println!("{} {}", helpers::string::arrow_icon(), &values.tasks[task].script),
-                println!("{} {} {}", format!("({task_path})").bright_cyan(), helpers::string::arrow_icon(), &values.tasks[task].script)
+                println!("{} {}", maid::colors::ARROW, &values.tasks[task].script),
+                println!("{} {} {}", format!("({task_path})").bright_cyan(), maid::colors::ARROW, &values.tasks[task].script)
             )
         }
 

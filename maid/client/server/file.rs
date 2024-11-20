@@ -3,6 +3,7 @@ use crate::helpers;
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use global_placeholders::global;
 use macros_rs::crashln;
+use maid::log::prelude::*;
 use std::{fs::write, fs::File, path::PathBuf};
 use tar::{Archive, Builder};
 use uuid::Uuid;
@@ -27,7 +28,7 @@ pub fn remove_tar(file: &String) {
 pub fn read_tar(archive: &Vec<u8>) -> Result<String, std::io::Error> {
     if !helpers::Exists::folder(global!("maid.temp_dir")).unwrap() {
         std::fs::create_dir_all(global!("maid.temp_dir")).unwrap();
-        log::debug!("created maid temp dir");
+        debug!("created maid temp dir");
     }
 
     let file_name = format!("{}/{}.tgz", global!("maid.temp_dir"), Uuid::new_v4());
@@ -47,7 +48,7 @@ pub fn unpack_tar(path: &String) -> std::io::Result<()> {
 pub fn write_tar(files: &Vec<String>) -> Result<String, std::io::Error> {
     if !helpers::Exists::folder(global!("maid.temp_dir")).unwrap() {
         std::fs::create_dir_all(global!("maid.temp_dir")).unwrap();
-        log::debug!("created maid temp dir");
+        debug!("created maid temp dir");
     }
 
     let file_name = format!("{}/{}.tgz", global!("maid.temp_dir"), Uuid::new_v4());
@@ -55,10 +56,10 @@ pub fn write_tar(files: &Vec<String>) -> Result<String, std::io::Error> {
     let enc = GzEncoder::new(archive, Compression::default());
     let mut tar = Builder::new(enc);
 
-    log::debug!("compressing to {}", &file_name);
+    debug!("compressing to {}", &file_name);
     for path in files {
         append_to_tar(&mut tar, path)?;
-        log::debug!("{} {:?}", helpers::string::add_icon(), path);
+        debug!("{} {:?}", maid::colors::ADD, path);
     }
 
     Ok(file_name)

@@ -2,8 +2,8 @@ use crate::helpers;
 use crate::server;
 use crate::structs::{ConnectionData, ConnectionInfo, Kind, Level, Maidfile, Task, Websocket};
 
-use colored::Colorize;
 use macros_rs::{crashln, fmtstr};
+use maid::log::prelude::*;
 use reqwest::blocking::Client;
 use tungstenite::protocol::frame::{coding::CloseCode::Normal, CloseFrame};
 use tungstenite::{client::connect_with_config, client::IntoClientRequest, protocol::WebSocketConfig, Message};
@@ -14,20 +14,13 @@ fn health(client: Client, values: Maidfile) -> server::api::health::Route {
 
     let response = match client.get(fmtstr!("{address}/api/health")).header("Authorization", fmtstr!("Bearer {token}")).send() {
         Ok(res) => res,
-        Err(err) => {
-            log::warn!("{err}");
-            crashln!("Unable to connect to the maid server. Is it up?");
-        }
+        Err(err) => error!(%err, "Unable to connect to the maid server. Is it up?"),
     };
 
-    let body =
-        match response.json::<server::api::health::Route>() {
-            Ok(body) => body,
-            Err(err) => {
-                log::warn!("{err}");
-                crashln!("Unable to connect to the maid server. Is the token correct?")
-            }
-        };
+    let body = match response.json::<server::api::health::Route>() {
+        Ok(body) => body,
+        Err(err) => error!(%err, "Unable to connect to the maid server. Is the token correct?"),
+    };
 
     return body;
 }
@@ -102,7 +95,7 @@ pub fn remote(task: Task) {
     request.headers_mut().insert("Authorization", fmtstr!("Bearer {token}").parse().unwrap());
 
     let (mut socket, response) = connect_with_config(request, Some(websocket_config), 3).expect("Can't connect");
-    log::debug!("response code: {}", response.status());
+    debug!("response code: {}", response.status());
 
     let connection_data = ConnectionData {
         info: ConnectionInfo {
@@ -121,7 +114,7 @@ pub fn remote(task: Task) {
         }
     };
 
-    log::debug!("sending information");
+    debug!("sending information");
     socket.send(Message::Text(serde_json::to_string(&connection_data).unwrap())).unwrap();
 
     loop {
@@ -159,7 +152,7 @@ pub fn remote(task: Task) {
 
     server::file::remove_tar(&file_name);
     // run.rs:96 implement that later
-    println!("\n{} {}", helpers::string::check_icon(), "finished task successfully".bright_green());
+    println!("\n{} {}", maid::colors::OK, "finished task successfully".bright_green());
     println!("{}", "removed temporary archive".bright_magenta());
 
     if let Err(err) = socket.close(Some(CloseFrame {

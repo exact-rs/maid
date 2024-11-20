@@ -1,5 +1,6 @@
 use crate::structs::Maidfile;
-use colored::Colorize;
+use maid::log::prelude::*;
+
 use macros_rs::{crashln, string, then};
 use std::{env, fs, io::Result, path::Path, path::PathBuf};
 
@@ -80,7 +81,7 @@ fn read_file(path: PathBuf, kind: &str) -> Maidfile {
     let contents = match fs::read_to_string(&path) {
         Ok(contents) => contents,
         Err(err) => {
-            log::warn!("{}", err);
+            warn!("{}", err);
             crashln!("Cannot find maidfile. Does it exist?");
         }
     };
@@ -90,17 +91,12 @@ fn read_file(path: PathBuf, kind: &str) -> Maidfile {
         "json" => serde_json::from_str(&contents).map_err(|err| string!(err)),
         "json5" => json5::from_str(&contents).map_err(|err| string!(err)),
         "yaml" | "yml" => serde_yaml::from_str(&contents).map_err(|err| string!(err)),
-        _ => {
-            log::warn!("Invalid format");
-            crashln!("Cannot read maidfile.");
-        }
+        _ => error!("Invalid format, cannot read Maidfile"),
     };
 
     match result {
         Ok(parsed) => parsed,
-        Err(err) => {
-            crashln!("Cannot read maidfile.\n{}", err.white());
-        }
+        Err(err) => error!("Cannot read Maidfile.\n{}", err.white()),
     }
 }
 
@@ -109,22 +105,16 @@ pub fn read_maidfile_with_error(filename: &String, error: &str) -> Maidfile {
         Ok(path) => match find_file(&path, &filename) {
             Some(path) => {
                 let extension = path.extension().and_then(|s| s.to_str());
-                log::debug!(path = path.display().to_string(), kind = extension, "Found tasks");
-                
+                debug!(path = path.display().to_string(), kind = extension, "Found tasks");
+
                 match extension {
                     Some("yaml") | Some("yml") | Some("json") | Some("json5") => read_file(path.clone(), extension.unwrap()),
                     _ => read_file(path, "toml"),
                 }
             }
-            None => {
-                log::warn!("{error}");
-                crashln!("{error}");
-            }
+            None => error!("{error}"),
         },
-        Err(err) => {
-            log::warn!("{err}");
-            crashln!("Home directory could not found.");
-        }
+        Err(err) => error!(%err, "Home directory could not found"),
     }
 }
 
@@ -133,18 +123,12 @@ pub fn find_maidfile_root(filename: &String) -> PathBuf {
         Ok(path) => match find_file(&path, &filename) {
             Some(mut path) => {
                 path.pop();
-                log::info!("Found project path: {}", path.display());
+                debug!("Found project path: {}", path.display());
                 return path;
             }
-            None => {
-                log::warn!("Cannot find project root.");
-                crashln!("Cannot find project root.");
-            }
+            None => error!("Cannot find project root."),
         },
-        Err(err) => {
-            log::warn!("{err}");
-            crashln!("Home directory could not found.");
-        }
+        Err(err) => error!(%err, "Home directory could not found"),
     }
 }
 

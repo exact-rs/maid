@@ -1,5 +1,46 @@
-use log::{level_filters::LevelFilter, Level};
 use std::fmt;
+use tracing::{level_filters::LevelFilter, Level};
+
+pub mod prelude {
+    pub use crate::{debug, error, info, trace, warn};
+    pub use colored::{ColoredString, Colorize};
+}
+
+#[macro_export]
+macro_rules! info {
+    ($($arg:tt)*) => {
+        tracing::info!($($arg)*)
+    }
+}
+
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {
+        tracing::warn!($($arg)*)
+    }
+}
+
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {{
+        tracing::error!($($arg)*);
+        std::process::exit(1);
+    }}
+}
+
+#[macro_export]
+macro_rules! debug {
+    ($($arg:tt)*) => {
+        tracing::debug!($($arg)*)
+    }
+}
+
+#[macro_export]
+macro_rules! trace {
+    ($($arg:tt)*) => {
+        tracing::trace!($($arg)*)
+    }
+}
 
 #[derive(clap::Args, Debug, Clone, Default)]
 pub struct Verbosity<L: LogLevel = ErrorLevel> {
@@ -106,11 +147,4 @@ pub struct InfoLevel;
 
 impl LogLevel for InfoLevel {
     fn default() -> Option<Level> { return Some(Level::INFO); }
-}
-
-#[derive(Copy, Clone, Debug, Default)]
-pub struct NoneLevel;
-
-impl LogLevel for NoneLevel {
-    fn default() -> Option<Level> { None }
 }

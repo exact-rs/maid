@@ -2,14 +2,16 @@ macro_rules! Handle {
     ($id:ident, $socket:ident, $expr:expr $(, || $callback:expr)?) => {
         $( $callback; )?
         if let Err(err) = $expr {
-            log::error!("{err}");
+            warn!("{err}");
             $socket.remove_container(&$id, Some(RemoveContainerOptions { force: true, ..Default::default() })).await?;
-            log::warn!("removed old container");
+            warn!("removed old container");
         }
     };
 }
 
 use crate::{structs::ConnectionData, table, Kind, Level, Response};
+use maid::log::prelude::*;
+
 use bytes::Bytes;
 use flate2::{write::GzEncoder, Compression};
 use futures_core::Stream;
@@ -48,7 +50,7 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
                 Ok(value) => {
                     parsed = Some(value);
                 }
-                Err(err) => log::error!("Failed to deserialize JSON: {:?}", err),
+                Err(err) => error!("Failed to deserialize JSON: {:?}", err),
             }
         }
     }
@@ -57,7 +59,7 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
     let name = &parsed.info.name;
     let image = parsed.info.remote.image.clone();
 
-    log::info!("creating container (task={name}, image={})", image);
+    info!("creating container (task={name}, image={})", image);
 
     let image_config = CreateImageOptions {
         from_image: str!(image.clone()),
@@ -65,7 +67,7 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
     };
 
     let mut container = socket.create_image(Some(image_config), None, None);
-    log::info!("image created");
+    info!("image created");
 
     while let Some(message) = container.next().await {
         let message = message.as_ref().expect("Failed to get CreateImageInfo");
@@ -75,12 +77,11 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
             message.progress.clone().unwrap_or_else(|| string!(""))
         );
 
-        let docker_message =
-            Response {
-                level: Level::Docker,
-                kind: Kind::Message,
-                message: Some(formatted),
-            };
+        let docker_message = Response {
+            level: Level::Docker,
+            kind: Kind::Message,
+            message: Some(formatted),
+        };
 
         stream.send(docker_message.into()).await?;
     }
@@ -92,9 +93,9 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
     };
 
     let id = socket.create_container::<&str, String>(None, config).await?.id;
-    log::info!("created container");
+    info!("created container");
 
-    Handle!(id, socket, socket.start_container::<String>(&id, None).await, || log::info!("started container"));
+    Handle!(id, socket, socket.start_container::<String>(&id, None).await, || info!("started container"));
 
     let binary_message = Response {
         level: Level::Success,
@@ -105,14 +106,14 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
     stream.send(binary_message.into()).await?;
 
     if let Some(result) = stream.next().await {
-        log::info!("received message: binary");
+        info!("received message: binary");
 
         let msg = result?;
         let bytes_to_body = |bytes: &[u8]| -> rocket::http::hyper::Body { rocket::http::hyper::Body::from(bytes.to_vec()) };
         let upload_options = UploadToContainerOptions { path: "/opt", ..Default::default() };
 
         Handle!(id, socket, socket.upload_to_container(&id, Some(upload_options), bytes_to_body(&msg.into_data())).await);
-        log::info!("wrote tarfile to container");
+        info!("wrote tarfile to container");
     }
 
     let dependencies = match &parsed.maidfile.tasks[&parsed.info.name].depends {
@@ -177,18 +178,17 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
 
                 Handle!(id, socket, stream.send(output_message.into()).await);
             } else if let Err(err) = msg {
-                log::error!("{err}");
+                warn!("{err}");
             }
         }
     }
 
-    let res =
-        socket.download_from_container(
-            &id,
-            Some(DownloadFromContainerOptions {
-                path: fmtstr!("/opt/{}", parsed.info.remote.pull.clone()),
-            }),
-        );
+    let res = socket.download_from_container(
+        &id,
+        Some(DownloadFromContainerOptions {
+            path: fmtstr!("/opt/{}", parsed.info.remote.pull.clone()),
+        }),
+    );
 
     let bytes = concat_byte_stream(res).await?;
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
@@ -197,7 +197,7 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
     let compressed_data = encoder.finish()?;
 
     Handle!(id, socket, stream.send(Message::binary(compressed_data)).await);
-    log::info!("sent message: binary, from [{}]", parsed.info.remote.pull);
+    info!("sent message: binary, from [{}]", parsed.info.remote.pull);
 
     let done_message = Response {
         level: Level::Success,
@@ -206,10 +206,10 @@ pub async fn exec(mut stream: DuplexStream, docker: &Result<Docker, anyhow::Erro
     };
 
     stream.send(done_message.into()).await?;
-    log::info!("sent message: [done]");
+    info!("sent message: [done]");
 
     socket.remove_container(&id, Some(RemoveContainerOptions { force: true, ..Default::default() })).await?;
-    log::info!("removed old container");
+    info!("removed old container");
 
     Ok(())
 }

@@ -8,6 +8,10 @@ build = "build/attribute.rs"
 repository = "https://github.com/exact-rs/maid"
 description = "🔨 A comprehensive build tool for all your needs."
 
+[lib]
+name = "maid"
+path = "maid/shared/lib.rs"
+
 [[bin]]
 name = "maid"
 path = "maid/client/main.rs"
@@ -71,6 +75,7 @@ home = "0.5.9"
 colored = "2.1.0"
 flate2 = "1.0.35"
 anyhow = "1.0.93"
+tracing = "0.1.40"
 termcolor = "1.4.1"
 macros-rs = "0.5.2"
 indicatif = "0.17.9"
@@ -78,7 +83,6 @@ serde_json = "1.0.133"
 text_placeholder = "0.5.1"
 global_placeholders = "0.1.0"
 
-log = { version = "0.1.40", package = "tracing" }
 clap = { version = "4.5.21", features = ["derive"] }
 serde = { version = "1.0.215", features = ["derive"] }
 uuid = { version = "1.11.0", features = ["v4", "fast-rng"] }

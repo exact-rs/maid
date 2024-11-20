@@ -4,9 +4,9 @@ use crate::parse;
 use crate::structs;
 use crate::table;
 
-use colored::Colorize;
 use inquire::Select;
 use macros_rs::{string, ternary};
+use maid::log::prelude::*;
 use text_placeholder::Template;
 
 pub fn json(path: &String, args: &Vec<String>, hydrate: bool) {
@@ -21,19 +21,22 @@ pub fn json(path: &String, args: &Vec<String>, hydrate: bool) {
 
 pub struct List;
 impl List {
-    pub fn all(path: &String, silent: bool, log_level: Option<log::Level>, force: bool) {
+    pub fn all(path: &String, silent: bool, log_level: Option<tracing::Level>, force: bool) {
         let values = helpers::maidfile::merge(path);
         let mut options: Vec<_> = values
             .tasks
             .iter()
             .map(|(key, task)| {
                 let info = match &task.info {
-                    Some(info) => ternary!(info.trim().len() < 1, string!("(no description)").bright_red(), format!("({info})").white()),
-                    None => string!("(no description)").bright_red(),
+                    Some(info) => match info.trim().len() < 1 {
+                        true => "(no description)".to_string().bright_red(),
+                        false => format!("({info})").white(),
+                    },
+                    None => "(no description)".to_string().bright_red(),
                 };
 
                 let verbose = match log_level.unwrap() {
-                    log::Level::ERROR => string!(),
+                    tracing::Level::ERROR => string!(),
                     _ => string!(task.script),
                 };
 
@@ -59,7 +62,7 @@ impl List {
         options.retain(|key| key.hidden == false);
         match Select::new("Select a task to run:", options).prompt() {
             Ok(task) => {
-                log::debug!("Starting {}", task.name);
+                debug!("Starting {}", task.name);
                 cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, false, log_level, force);
             }
 
@@ -67,19 +70,22 @@ impl List {
         }
     }
 
-    pub fn remote(path: &String, silent: bool, log_level: Option<log::Level>) {
+    pub fn remote(path: &String, silent: bool, log_level: Option<tracing::Level>) {
         let values = helpers::maidfile::merge(path);
         let mut options: Vec<_> = values
             .tasks
             .iter()
             .map(|(key, task)| {
                 let info = match &task.info {
-                    Some(info) => ternary!(info.trim().len() < 1, string!("(no description)").bright_red(), format!("({info})").white()),
-                    None => string!("(no description)").bright_red(),
+                    Some(info) => match info.trim().len() < 1 {
+                        true => "(no description)".to_string().bright_red(),
+                        false => format!("({info})").white(),
+                    },
+                    None => "(no description)".to_string().bright_red(),
                 };
 
                 let verbose = match log_level.unwrap() {
-                    log::Level::ERROR => string!(),
+                    tracing::Level::ERROR => string!(),
                     _ => string!(task.script),
                 };
 
@@ -99,7 +105,7 @@ impl List {
         options.retain(|key| key.hidden == false);
         match Select::new("Select a remote task to run:", options).prompt() {
             Ok(task) => {
-                log::debug!("Starting {}", task.name);
+                debug!("Starting {}", task.name);
                 cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, true, log_level, false);
             }
 
