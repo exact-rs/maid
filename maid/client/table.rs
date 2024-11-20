@@ -1,9 +1,7 @@
 use crate::helpers;
 use crate::structs::Maidfile;
 
-use colored::Colorize;
 use macros_rs::{errorln, str, ternary};
-use serde_json::json;
 use std::path::PathBuf;
 use std::{collections::BTreeMap, collections::HashMap, env};
 use text_placeholder::Template;
@@ -16,13 +14,13 @@ pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap
     table.insert("os.platform", env::consts::OS);
     table.insert("os.arch", env::consts::ARCH);
 
-    log::info!("{} os.platform: '{}'", helpers::string::add_icon(), env::consts::OS.yellow());
-    log::info!("{} os.arch: '{}'", helpers::string::add_icon(), env::consts::ARCH.yellow());
+    log::trace!(os_platform = env::consts::OS);
+    log::trace!(os_arch = env::consts::ARCH);
 
     match env::current_dir() {
         Ok(path) => {
             table.insert("dir.current", helpers::string::path_to_str(&path));
-            log::info!("{} dir.current: '{}'", helpers::string::add_icon(), helpers::string::path_to_str(&path).yellow());
+            log::trace!(dir_current = path.display().to_string());
         }
         Err(err) => {
             log::warn!("{err}");
@@ -33,19 +31,18 @@ pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap
     match home::home_dir() {
         Some(path) => {
             table.insert("dir.home", helpers::string::path_to_str(&path));
-            log::info!("{} dir.home: '{}'", helpers::string::add_icon(), helpers::string::path_to_str(&path).yellow());
+            log::trace!(dir_home = path.display().to_string());
         }
         None => {
             errorln!("Home directory could not be added as script variable.");
         }
     }
 
-    let project_root = helpers::string::path_to_str(&project);
-    table.insert("dir.project", project_root);
-    log::info!("{} dir.project: '{}'", helpers::string::add_icon(), project_root.yellow());
+    table.insert("dir.project", helpers::string::path_to_str(&project));
+    log::trace!(dir_project = project.display().to_string());
 
     for (pos, arg) in args.iter().enumerate() {
-        log::info!("{} arg.{pos}: '{}'", helpers::string::add_icon(), arg.yellow());
+        log::trace!("arg_{pos} = \"{arg}\"");
         table.insert(str!(format!("arg.{pos}")), arg);
     }
 
@@ -62,11 +59,9 @@ pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap
         );
 
         env::set_var(key, value_formatted.clone());
-        log::info!("{} env.{key}: '{}'", helpers::string::add_icon(), value_formatted.yellow());
+        log::trace!("env_{key} = \"{value_formatted}\"");
         table.insert(str!(format!("env.{}", key.clone())), str!(value_formatted));
     }
-
-    log::trace!("{}", json!({ "env": table }));
-
+    
     return table;
 }

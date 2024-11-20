@@ -352,16 +352,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "clap-verbosity-flag"
-version = "2.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34c77f67047557f62582784fd7482884697731b2932c7d37ced54bce2312e1e2"
-dependencies = [
- "clap",
- "log",
-]
-
-[[package]]
 name = "clap_builder"
 version = "4.5.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1452,7 +1442,6 @@ dependencies = [
  "bytes",
  "chrono",
  "clap",
- "clap-verbosity-flag",
  "colored",
  "data-encoding",
  "env_logger",
@@ -1469,7 +1458,6 @@ dependencies = [
  "json5",
  "lazy_static",
  "libc",
- "log",
  "macros-rs",
  "merge-struct",
  "merkle_hash",
@@ -1492,6 +1480,8 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml",
+ "tracing",
+ "tracing-subscriber",
  "tungstenite 0.20.1",
  "url",
  "uuid",

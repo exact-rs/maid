@@ -9,7 +9,8 @@ mod table;
 mod task;
 
 use clap::{Parser, ValueEnum};
-use clap_verbosity_flag::Verbosity;
+use cli::verbose::{NoneLevel, Verbosity};
+use tracing_subscriber::{fmt, prelude::*};
 use macros_rs::str;
 use std::path::Path;
 
@@ -70,7 +71,7 @@ struct Cli {
     system: Option<System>,
     
     #[clap(flatten)]
-    verbose: Verbosity,
+    verbose: Verbosity<NoneLevel>,
     
     /// Shows this quick reference
     #[clap(short, long, action = clap::ArgAction::HelpLong)]
@@ -97,10 +98,15 @@ enum Project {
 
 fn main() {
     let cli = Cli::parse();
-
+    let fmt_layer = fmt::layer().without_time();
+        
+    tracing_subscriber::registry()
+        .with(cli.verbose.log_level_filter())
+        .with(fmt_layer)
+        .init();
+        
     globals::init();
-    env_logger::Builder::new().filter_level(cli.verbose.log_level_filter()).init();
-    
+        
     dispatch!(cli, {
         init => cli::butler::init(),
         health => server::cli::connect(&cli.path), 

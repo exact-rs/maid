@@ -33,7 +33,7 @@ impl List {
                 };
 
                 let verbose = match log_level.unwrap() {
-                    log::Level::Error => string!(),
+                    log::Level::ERROR => string!(),
                     _ => string!(task.script),
                 };
 
@@ -79,7 +79,7 @@ impl List {
                 };
 
                 let verbose = match log_level.unwrap() {
-                    log::Level::Error => string!(),
+                    log::Level::ERROR => string!(),
                     _ => string!(task.script),
                 };
 

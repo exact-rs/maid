@@ -1,7 +1,6 @@
 use crate::structs::Maidfile;
 use colored::Colorize;
 use macros_rs::{crashln, string, then};
-use serde_json::json;
 use std::{env, fs, io::Result, path::Path, path::PathBuf};
 
 macro_rules! create_path {
@@ -49,7 +48,7 @@ fn find_path(path: &Path, file_name: &str, kind: &str) -> Result<Option<fs::DirE
     }
 }
 
-fn find_file(starting_directory: &Path, file_name: &String, trace: bool) -> Option<PathBuf> {
+fn find_file(starting_directory: &Path, file_name: &String) -> Option<PathBuf> {
     let mut path: PathBuf = starting_directory.into();
     let find_kind = |kind: &str, mut inner: PathBuf| -> Filesystem {
         let file_path = create_path!(file_name, kind);
@@ -59,10 +58,6 @@ fn find_file(starting_directory: &Path, file_name: &String, trace: bool) -> Opti
             Some(file) => inner.push(file.path()),
             None => inner.push(file_path),
         }
-
-        if trace {
-            log::trace!("{}", json!({"kind": kind, "path": inner}))
-        };
 
         Filesystem {
             path: Some(inner.clone()),
@@ -82,7 +77,6 @@ fn find_file(starting_directory: &Path, file_name: &String, trace: bool) -> Opti
 }
 
 fn read_file(path: PathBuf, kind: &str) -> Maidfile {
-    log::debug!("Maidfile is {kind}");
     let contents = match fs::read_to_string(&path) {
         Ok(contents) => contents,
         Err(err) => {
@@ -112,11 +106,11 @@ fn read_file(path: PathBuf, kind: &str) -> Maidfile {
 
 pub fn read_maidfile_with_error(filename: &String, error: &str) -> Maidfile {
     match env::current_dir() {
-        Ok(path) => match find_file(&path, &filename, true) {
+        Ok(path) => match find_file(&path, &filename) {
             Some(path) => {
-                log::info!("Found maidfile path: {}", path.display());
-
                 let extension = path.extension().and_then(|s| s.to_str());
+                log::debug!(path = path.display().to_string(), kind = extension, "Found tasks");
+                
                 match extension {
                     Some("yaml") | Some("yml") | Some("json") | Some("json5") => read_file(path.clone(), extension.unwrap()),
                     _ => read_file(path, "toml"),
@@ -136,7 +130,7 @@ pub fn read_maidfile_with_error(filename: &String, error: &str) -> Maidfile {
 
 pub fn find_maidfile_root(filename: &String) -> PathBuf {
     match env::current_dir() {
-        Ok(path) => match find_file(&path, &filename, false) {
+        Ok(path) => match find_file(&path, &filename) {
             Some(mut path) => {
                 path.pop();
                 log::info!("Found project path: {}", path.display());

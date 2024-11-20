@@ -1,3 +1,8 @@
+pub(crate) mod verbose;
+pub(crate) mod butler;
+pub(crate) mod run;
+pub(crate) mod tasks;
+
 use crate::helpers;
 use crate::parse;
 use crate::server;
@@ -230,7 +235,3 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
         }
     }
 }
-
-pub mod butler;
-pub mod run;
-pub mod tasks;
