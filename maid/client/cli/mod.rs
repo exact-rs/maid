@@ -181,7 +181,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                     config_path.clone(),
                     toml::to_string(&CacheConfig {
                         target: cache.target,
-                        hash: hash.clone(),
+                        hash: hash.to_owned(),
                     })
                     .unwrap(),
                 ) {
