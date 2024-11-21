@@ -21,7 +21,7 @@ pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap
     match env::current_dir() {
         Ok(path) => {
             table.insert("dir.current", helpers::string::path_to_str(&path));
-            trace!(dir_current = path.display().to_string());
+            trace!("dir.current = \"{}\"", path.display());
         }
         Err(err) => error!(%err, "Current directory could not be added as script variable."),
     }
@@ -29,16 +29,16 @@ pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap
     match home::home_dir() {
         Some(path) => {
             table.insert("dir.home", helpers::string::path_to_str(&path));
-            trace!(dir_home = path.display().to_string());
+            trace!("dir.home = \"{}\"", path.display());
         }
         None => error!("Home directory could not be added as script variable."),
     }
 
     table.insert("dir.project", helpers::string::path_to_str(&project));
-    trace!(dir_project = project.display().to_string());
+    trace!("dir.project = \"{}\"", project.display());
 
     for (pos, arg) in args.iter().enumerate() {
-        trace!("arg_{pos} = \"{arg}\"");
+        trace!("arg.{pos} = \"{arg}\"");
         table.insert(str!(format!("arg.{pos}")), arg);
     }
 
@@ -55,7 +55,7 @@ pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap
         );
 
         env::set_var(key, value_formatted.clone());
-        trace!("env_{key} = \"{value_formatted}\"");
+        trace!("env.{key} = \"{value_formatted}\"");
         table.insert(str!(format!("env.{}", key.clone())), str!(value_formatted));
     }
 

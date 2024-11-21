@@ -9,12 +9,12 @@ use std::{fs::File, io::Write, path::Path, time::Duration};
 
 pub(crate) fn clean() {
     if let Ok(_) = std::fs::remove_dir_all(".maid/temp") {
-        info!("{}", "Purged temp archives".green())
+        info!("Purged temp archives")
     }
 
     match std::fs::remove_dir_all(".maid/cache") {
-        Ok(_) => info!("{}", "Emptied build cache".green()),
-        Err(_) => warn!("{}", "Build cache does not exist, cannot remove".yellow()),
+        Ok(_) => info!("Emptied build cache"),
+        Err(_) => warn!("Build cache does not exist, cannot remove"),
     };
 }
 

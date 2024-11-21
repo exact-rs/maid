@@ -36,7 +36,7 @@ impl List {
                 };
 
                 let verbose = match log_level.unwrap() {
-                    tracing::Level::ERROR => string!(),
+                    tracing::Level::INFO => string!(),
                     _ => string!(task.script),
                 };
 
@@ -85,7 +85,7 @@ impl List {
                 };
 
                 let verbose = match log_level.unwrap() {
-                    tracing::Level::ERROR => string!(),
+                    tracing::Level::INFO => string!(),
                     _ => string!(task.script),
                 };
 

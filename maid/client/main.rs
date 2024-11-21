@@ -8,12 +8,14 @@ mod structs;
 mod table;
 mod task;
 
-use maid::log::{InfoLevel, Verbosity};
+use maid::log::{
+    layer::prelude::*,
+    verbose::{InfoLevel, Verbosity},
+};
 
 use clap::{Parser, ValueEnum};
 use macros_rs::str;
 use std::path::Path;
-use tracing_subscriber::{fmt, prelude::*};
 
 macro_rules! dispatch {
     ($cli:expr, { $($flag:ident => $func:expr),+ $(,)? }) => {$(
@@ -99,11 +101,11 @@ enum Project {
 
 fn main() {
     let cli = Cli::parse();
-    let fmt_layer = fmt::layer().without_time();
-
-    tracing_subscriber::registry().with(cli.verbose.log_level_filter()).with(fmt_layer).init();
+    let log_layer = MaidFormatLayer::new();
 
     globals::init();
+
+    tracing_subscriber::registry().with(cli.verbose.log_level_filter()).with(log_layer).init();
 
     dispatch!(cli, {
         init => cli::dispatch::init(),
