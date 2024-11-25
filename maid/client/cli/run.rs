@@ -120,7 +120,7 @@ fn run_script(runner: Runner) {
     }
 }
 
-pub fn task(task: cli::Task) {
+pub(crate) fn task(task: cli::Task) {
     let mut script: Vec<&str> = vec![];
 
     if task.script.is_str() {

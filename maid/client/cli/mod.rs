@@ -20,14 +20,15 @@ use macros_rs::{
     fs::{file_exists, folder_exists},
 };
 
-pub fn get_version(short: bool) -> String {
-    return match short {
-        true => format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
-        false => format!("{} ({} {})", env!("CARGO_PKG_VERSION"), env!("GIT_HASH"), env!("BUILD_DATE")),
-    };
+pub(crate) fn get_version(short: bool) -> String {
+    if short {
+        format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
+        format!("{} ({} {})", env!("CARGO_PKG_VERSION"), env!("GIT_HASH"), env!("BUILD_DATE"))
+    }
 }
 
-pub fn info(path: &String) {
+pub(crate) fn info(path: &String) {
     let values = parse::merge(path).project;
     let project_root = parse::file::find_maidfile_root(path);
 
@@ -56,7 +57,7 @@ pub fn info(path: &String) {
     };
 }
 
-pub fn env(path: &String) {
+pub(crate) fn env(path: &String) {
     let values = parse::merge(path);
 
     let project_name = match values.project {
@@ -78,14 +79,14 @@ pub fn env(path: &String) {
     }
 }
 
-pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<tracing::Level>, force: bool) {
+pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<tracing::Level>, force: bool) {
     debug!("Starting maid {}", env!("CARGO_PKG_VERSION"));
 
     if task.is_empty() {
         if is_remote {
-            tasks::List::remote(path, silent, log_level);
+            tasks::list_remote(path, silent, log_level);
         } else {
-            tasks::List::all(path, silent, log_level, force);
+            tasks::list_all(path, silent, log_level, force);
         }
     } else {
         let values = parse::merge(path);

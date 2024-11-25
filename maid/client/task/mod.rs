@@ -1,2 +1,2 @@
-pub mod cache;
-pub mod progress;
+pub(crate) mod cache;
+pub(crate) mod progress;

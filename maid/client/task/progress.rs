@@ -1,7 +1,7 @@
 use indicatif::{ProgressBar, ProgressStyle};
 use macros_rs::fmt::fmtstr;
 
-pub fn init(ticks: Vec<&str>, template: &str, tick: u64) -> ProgressBar {
+pub(crate) fn init(ticks: Vec<&str>, template: &str, tick: u64) -> ProgressBar {
     let pb = ProgressBar::new_spinner();
     let tick_str: Vec<&str> = ticks.into_iter().map(|item| fmtstr!("{item} ")).collect();
 

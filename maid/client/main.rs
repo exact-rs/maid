@@ -26,7 +26,7 @@ macro_rules! dispatch {
 #[command(version = str!(cli::get_version(false)))]
 #[clap(disable_help_flag = true, disable_help_subcommand = true)]
 struct Cli {
-    /// Run a task defined in maidfile
+    /// Run a task defined in Maidfile
     #[arg(default_value = "", hide_default_value = true)]
     task: Vec<String>,
 
@@ -116,8 +116,8 @@ fn main() {
             false => cli::dispatch::clean(),
         },
         list => match cli.remote {
-            true => cli::tasks::List::remote(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level()),
-            false => cli::tasks::List::all(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level(), cli.force),
+            true => cli::tasks::list_remote(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level()),
+            false => cli::tasks::list_all(&cli.path, cli.verbose.is_silent(), cli.verbose.log_level(), cli.force),
         }
     });
 
@@ -131,8 +131,8 @@ fn main() {
     if let Some(system) = cli.system {
         return match system {
             System::Update => cli::dispatch::update(), // add real update checker
-            System::Json => cli::tasks::json(&cli.path, &cli.task, false),
-            System::JsonHydrated => cli::tasks::json(&cli.path, &cli.task, true),
+            System::Json => cli::tasks::list_json(&cli.path, &cli.task, false),
+            System::JsonHydrated => cli::tasks::list_json(&cli.path, &cli.task, true),
         };
     }
 

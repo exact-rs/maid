@@ -1,8 +1,8 @@
-use std::mem;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::mem;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParseError {
+pub(crate) enum ParseError {
     UnterminatedQuote,
     DanglingBackslash,
     InvalidEscape(char),
@@ -22,7 +22,7 @@ impl std::error::Error for ParseError {}
 
 #[derive(Debug)]
 enum State {
-    Delimiter,     
+    Delimiter,
     Backslash,
     Unquoted,
     UnquotedBackslash,
@@ -30,7 +30,6 @@ enum State {
     DoubleQuoted,
     DoubleQuotedBackslash,
 }
-
 
 pub(crate) trait IntoArgs {
     fn try_into_args(&self) -> Result<Vec<String>, ParseError>;
@@ -160,16 +159,14 @@ impl ArgumentParser {
                 self.current_word.push(c);
                 Ok(State::DoubleQuoted)
             }
-            c => Err(ParseError::InvalidEscape(c))
+            c => Err(ParseError::InvalidEscape(c)),
         }
     }
 
     fn handle_end_of_input(&mut self) -> Result<(), ParseError> {
         match self.state {
-            State::SingleQuoted | State::DoubleQuoted =>
-                Err(ParseError::UnterminatedQuote),
-            State::DoubleQuotedBackslash =>
-                Err(ParseError::DanglingBackslash),
+            State::SingleQuoted | State::DoubleQuoted => Err(ParseError::UnterminatedQuote),
+            State::DoubleQuotedBackslash => Err(ParseError::DanglingBackslash),
             State::Backslash | State::UnquotedBackslash => {
                 self.current_word.push('\\');
                 self.push_word();
