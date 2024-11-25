@@ -67,7 +67,7 @@ fn find_file(starting_directory: &Path, file_name: &String) -> Option<PathBuf> {
     };
 
     loop {
-        for extension in vec!["", "toml", "yaml", "yml", "json", "json5"].iter() {
+        for extension in vec!["", "toml", "yaml", "yml", "json", "hcl"].iter() {
             let kind = find_kind(extension, path.clone());
             then!(kind.is_file, return kind.path);
         }
@@ -89,7 +89,7 @@ fn read_file(path: PathBuf, kind: &str) -> Maidfile {
     let result = match kind {
         "toml" => toml::from_str(&contents).map_err(|err| string!(err)),
         "json" => serde_json::from_str(&contents).map_err(|err| string!(err)),
-        "json5" => json5::from_str(&contents).map_err(|err| string!(err)),
+        "hcl" => hcl::from_str(&contents).map_err(|err| string!(err)),
         "yaml" | "yml" => serde_yaml::from_str(&contents).map_err(|err| string!(err)),
         _ => error!("Invalid format, cannot read Maidfile"),
     };
@@ -108,7 +108,7 @@ pub fn read_maidfile_with_error(filename: &String, error: &str) -> Maidfile {
                 debug!(path = path.display().to_string(), kind = extension, "Found tasks");
 
                 match extension {
-                    Some("yaml") | Some("yml") | Some("json") | Some("json5") => read_file(path.clone(), extension.unwrap()),
+                    Some("yaml") | Some("yml") | Some("json") | Some("hcl") => read_file(path.clone(), extension.unwrap()),
                     _ => read_file(path, "toml"),
                 }
             }
