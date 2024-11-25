@@ -1,22 +1,14 @@
 use maid::log::prelude::*;
+use maid::models::client::UpdateData;
 
 use inquire::Text;
 use macros_rs::fs::file_exists;
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
+use reqwest::blocking;
 use std::{fs::File, io::Write, path::Path, time::Duration};
 
-pub(crate) fn clean() {
-    if let Ok(_) = std::fs::remove_dir_all(".maid/temp") {
-        info!("Purged temp archives")
-    }
-
-    match std::fs::remove_dir_all(".maid/cache") {
-        Ok(_) => info!("Emptied build cache"),
-        Err(_) => warn!("Build cache does not exist, cannot remove"),
-    };
-}
-
+// rewrite
 pub(crate) fn watch(path: &Path) {
     let (tx, rx) = std::sync::mpsc::channel();
     let mut debouncer = new_debouncer(Duration::from_secs(1), tx).unwrap();
@@ -29,8 +21,36 @@ pub(crate) fn watch(path: &Path) {
     }
 }
 
-pub(crate) fn update() { println!("check and retrive updates") }
+pub(crate) fn update() {
+    let checker = match blocking::get("https://api.maid.ci/versions/latest") {
+        Ok(res) => res.json::<UpdateData>(),
+        Err(err) => error!(%err, "Unable to check for updates"),
+    };
 
+    let version = match checker {
+        Ok(body) => body.version,
+        Err(err) => error!(%err, "Unable to check for updates"),
+    };
+
+    if version == env!("CARGO_PKG_VERSION") {
+        info!("Maid is currently on the latest version")
+    } else {
+        warn!("Your install is currently out of date.\n\nThe current version is {version}\nPlease update from https://maid.ci/install")
+    }
+}
+
+pub(crate) fn clean() {
+    if let Ok(_) = std::fs::remove_dir_all(".maid/temp") {
+        info!("Purged temp archives")
+    }
+
+    match std::fs::remove_dir_all(".maid/cache") {
+        Ok(_) => info!("Emptied build cache"),
+        Err(_) => warn!("Build cache does not exist, cannot remove"),
+    };
+}
+
+// improve
 pub(crate) fn init() {
     fn create_error(name: &str, path: &str) {
         std::fs::remove_file(path).unwrap();

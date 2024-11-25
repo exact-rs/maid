@@ -130,7 +130,7 @@ fn main() {
 
     if let Some(system) = cli.system {
         return match system {
-            System::Update => cli::dispatch::update(), // add real update checker
+            System::Update => cli::dispatch::update(),
             System::Json => cli::tasks::list_json(&cli.path, &cli.task, false),
             System::JsonHydrated => cli::tasks::list_json(&cli.path, &cli.task, true),
         };

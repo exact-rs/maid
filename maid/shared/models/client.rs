@@ -151,3 +151,9 @@ pub struct ConnectionData {
     pub info: ConnectionInfo,
     pub maidfile: Maidfile,
 }
+
+#[derive(Deserialize)]
+pub struct UpdateData {
+    pub version: String,
+    pub download: String,
+}
