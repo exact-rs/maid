@@ -1,6 +1,5 @@
 mod cli;
 mod globals;
-mod helpers;
 mod parse;
 mod server;
 mod shell;
