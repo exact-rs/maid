@@ -14,7 +14,7 @@ pub struct Maidfile {
     pub tasks: BTreeMap<String, Tasks>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Project {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,

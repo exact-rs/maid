@@ -124,7 +124,7 @@ fn main() {
     if let Some(project) = cli.project {
         return match project {
             Project::Info => cli::info(&cli.path), // add more info
-            Project::Env => {}                     // print env from maidfile
+            Project::Env => cli::env(&cli.path),
         };
     }
 

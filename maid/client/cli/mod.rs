@@ -6,7 +6,7 @@ use crate::parse;
 use crate::server;
 use crate::task;
 
-use maid::models::client::{Cache, CacheConfig, Task};
+use maid::models::client::{Cache, CacheConfig, Project, Task};
 use maid::{helpers, log::prelude::*};
 
 use fs_extra::dir::get_size;
@@ -28,32 +28,54 @@ pub fn get_version(short: bool) -> String {
 }
 
 pub fn info(path: &String) {
-    let values = parse::merge(path);
+    let values = parse::merge(path).project;
     let project_root = parse::file::find_maidfile_root(path);
 
-    let name = match &values.project {
-        Some(project) => match project.name.clone() {
-            Some(name) => name,
-            None => string!("none"),
-        },
-        None => string!("none"),
+    let project_name = match values.to_owned() {
+        Some(project) => project.name,
+        None => Project::default().name,
     };
 
-    let version = match &values.project {
-        Some(project) => match project.version.clone() {
-            Some(version) => version,
-            None => string!("none"),
-        },
-        None => string!("none"),
+    let project_version = match values.to_owned() {
+        Some(project) => project.version,
+        None => Project::default().version,
     };
 
-    println!(
-        "{}\n{}\n{}\n{}",
-        "Project Info".green().bold(),
-        format!(" {}: {}", "- Name".white(), name.bright_yellow()),
-        format!(" {}: {}", "- Version".white(), version.bright_yellow()),
-        format!(" {}: {}", "- Project".white(), project_root.to_string_lossy().bright_yellow())
-    );
+    match project_name {
+        Some(name) => info!("Project {name} info\n"),
+        None => info!("Project info\n"),
+    };
+
+    match project_version {
+        Some(version) => println!(
+            "{}\n{}",
+            format!("{}: {}", "Version".white(), version.bright_yellow()),
+            format!("{}: {}", "Directory".white(), project_root.to_string_lossy().bright_yellow())
+        ),
+        None => println!("{}", format!("{}: {}", "Directory".white(), project_root.to_string_lossy().bright_yellow())),
+    };
+}
+
+pub fn env(path: &String) {
+    let values = parse::merge(path);
+
+    let project_name = match values.project {
+        Some(project) => project.name,
+        None => Project::default().name,
+    };
+
+    if let Some(env) = values.env {
+        match project_name {
+            Some(name) => info!("ENV for {name}\n"),
+            None => info!("ENV for this project\n"),
+        };
+
+        for (key, value) in env {
+            println!("{}{}{value}", key.bright_cyan(), "=".white())
+        }
+    } else {
+        error!("No ENV values defined for this project")
+    }
 }
 
 pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<tracing::Level>, force: bool) {
