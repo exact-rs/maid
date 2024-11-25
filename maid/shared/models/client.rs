@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use toml::Value as TomlValue;
+use toml::Value;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Maidfile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub import: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub env: Option<BTreeMap<String, TomlValue>>,
+    pub env: Option<BTreeMap<String, Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub project: Option<Project>,
     pub tasks: BTreeMap<String, Tasks>,
@@ -39,7 +39,7 @@ pub struct Address {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Tasks {
-    pub script: TomlValue,
+    pub script: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hide: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -83,7 +83,7 @@ pub struct Task {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remote: Option<Remote>,
     pub project: PathBuf,
-    pub script: TomlValue,
+    pub script: Value,
     pub path: String,
     pub args: Vec<String>,
     pub silent: bool,

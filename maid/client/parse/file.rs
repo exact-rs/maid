@@ -1,7 +1,7 @@
-use crate::structs::Maidfile;
 use maid::log::prelude::*;
+use maid::models::client::Maidfile;
 
-use macros_rs::{crashln, string, then};
+use macros_rs::{exp::then, fmt::string};
 use std::{env, fs, io::Result, path::Path, path::PathBuf};
 
 macro_rules! create_path {
@@ -22,9 +22,7 @@ struct Filesystem {
 fn working_dir() -> PathBuf {
     match env::current_dir() {
         Ok(path) => path,
-        Err(_) => {
-            crashln!("Unable to find current working dir");
-        }
+        Err(_) => error!("Unable to find current working dir"),
     }
 }
 
@@ -80,10 +78,7 @@ fn find_file(starting_directory: &Path, file_name: &String) -> Option<PathBuf> {
 fn read_file(path: PathBuf, kind: &str) -> Maidfile {
     let contents = match fs::read_to_string(&path) {
         Ok(contents) => contents,
-        Err(err) => {
-            warn!("{}", err);
-            crashln!("Cannot find maidfile. Does it exist?");
-        }
+        Err(_) => error!("Cannot find Maidfile. Does it exist?"),
     };
 
     let result = match kind {

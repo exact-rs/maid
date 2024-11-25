@@ -1,8 +1,7 @@
-use crate::helpers;
 use crate::structs::Maidfile;
-use maid::log::prelude::*;
+use maid::{helpers, log::prelude::*};
 
-use macros_rs::{str, ternary};
+use macros_rs::{exp::ternary, fmt::str};
 use serde_json::Value;
 use std::path::PathBuf;
 use std::{collections::BTreeMap, collections::HashMap, env};

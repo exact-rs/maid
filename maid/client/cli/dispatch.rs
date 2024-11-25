@@ -1,8 +1,7 @@
-use crate::helpers;
 use maid::log::prelude::*;
 
 use inquire::Text;
-use macros_rs::string;
+use macros_rs::fs::file_exists;
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 use std::{fs::File, io::Write, path::Path, time::Duration};
@@ -41,7 +40,7 @@ pub(crate) fn init() {
     let path = "maidfile";
     let example_maidfile = "[tasks.example]\ninfo = \"this is a comment\"\nscript = \"echo 'hello world'\"";
 
-    if !helpers::Exists::file(path.to_owned()).unwrap() {
+    if !file_exists!(path) {
         println!("This utility will walk you through creating a maidfile.\n");
 
         let mut file = File::create(&path).unwrap();
@@ -62,7 +61,7 @@ pub(crate) fn init() {
 
         writeln!(&mut file, "\n{example_maidfile}").unwrap();
         println!("{}", "\n✨ success, saved maidfile".yellow());
-        if helpers::Exists::file(string!(".git")).unwrap() {
+        if file_exists!(".git") {
             println!("{}", "dont forget to add '.maid' to your .gitignore".white());
         }
     } else {

@@ -2,19 +2,23 @@ pub(crate) mod dispatch;
 pub(crate) mod run;
 pub(crate) mod tasks;
 
-use crate::helpers;
 use crate::parse;
 use crate::server;
-use crate::structs::{Cache, CacheConfig, Task};
 use crate::task;
 
-use maid::log::prelude::*;
+use maid::models::client::{Cache, CacheConfig, Task};
+use maid::{helpers, log::prelude::*};
 
 use fs_extra::dir::get_size;
 use global_placeholders::global;
 use human_bytes::human_bytes;
-use macros_rs::{crashln, fmtstr, string, ternary};
 use std::{env, path::Path, time::Instant};
+
+use macros_rs::{
+    exp::ternary,
+    fmt::{fmtstr, string},
+    fs::{file_exists, folder_exists},
+};
 
 pub fn get_version(short: bool) -> String {
     return match short {
@@ -24,7 +28,7 @@ pub fn get_version(short: bool) -> String {
 }
 
 pub fn info(path: &String) {
-    let values = helpers::maidfile::merge(path);
+    let values = parse::merge(path);
     let project_root = parse::file::find_maidfile_root(path);
 
     let name = match &values.project {
@@ -62,22 +66,22 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
             tasks::List::all(path, silent, log_level, force);
         }
     } else {
-        let values = helpers::maidfile::merge(path);
+        let values = parse::merge(path);
         let project_root = parse::file::find_maidfile_root(path);
         let cwd = &helpers::file::get_current_working_dir();
 
         if values.tasks.get(task).is_none() {
-            crashln!("Maid could not find the task '{task}'. Does it exist?");
+            error!("Could not find the task '{task}'. Does it exist?");
         }
 
         if is_remote && values.tasks.get(task).unwrap().remote.is_none() {
-            crashln!("Maid could not find the remote task '{task}'. Does it exist?");
+            error!("Could not find the remote task '{task}'. Does it exist?");
         }
 
         match values.tasks.get(task).unwrap().remote.as_ref() {
             Some(val) => {
                 if val.exclusive && !is_remote {
-                    crashln!("Task '{task}' is remote only.");
+                    error!("Task '{task}' is remote only.");
                 }
             }
             None => {}
@@ -125,7 +129,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
         .to_string();
 
         if !cache.path.trim().is_empty() && !cache.target.is_empty() && !is_remote {
-            if !helpers::Exists::folder(global!("maid.cache_dir", task)).unwrap() {
+            if !folder_exists!(&global!("maid.cache_dir", task)) {
                 std::fs::create_dir_all(global!("maid.cache_dir", task)).unwrap();
                 debug!("created maid cache dir");
             }
@@ -133,7 +137,7 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
             let hash = task::cache::create_hash(&cache.path);
             let config_path = format!(".maid/cache/{task}/{}.toml", task);
 
-            if !helpers::Exists::file(config_path.clone()).unwrap() {
+            if !file_exists!(&config_path) {
                 match std::fs::write(
                     config_path.clone(),
                     toml::to_string(&CacheConfig {
@@ -142,19 +146,19 @@ pub fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep:
                     })
                     .unwrap(),
                 ) {
-                    Ok(_) => debug!("created {task} cache config"),
-                    Err(err) => crashln!("error {err} creating cache config"),
+                    Ok(_) => debug!("Created {task} cache config"),
+                    Err(err) => error!(%err, "Cannot create cache config"),
                 };
             }
 
             let contents = match std::fs::read_to_string(config_path.clone()) {
                 Ok(content) => content,
-                Err(err) => crashln!("Cannot read cache config: {err}"),
+                Err(err) => error!(%err, "Cannot read cache config"),
             };
 
             let json = match toml::from_str::<CacheConfig>(&contents) {
                 Ok(contents) => contents,
-                Err(err) => crashln!("Cannot read cache config: {err}"),
+                Err(err) => error!(%err, "Cannot read cache config"),
             };
 
             if json.hash == hash && !is_dep && !force {

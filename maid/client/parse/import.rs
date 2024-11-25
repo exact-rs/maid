@@ -1,6 +1,6 @@
 use crate::parse;
-use crate::structs::Maidfile;
-use macros_rs::fmtstr;
+use macros_rs::fmt::fmtstr;
+use maid::models::client::Maidfile;
 
 pub fn push(path_list: Option<Vec<String>>) -> Vec<Maidfile> {
     let mut values: Vec<Maidfile> = vec![];

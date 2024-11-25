@@ -1,8 +1,6 @@
-use crate::helpers;
-
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use global_placeholders::global;
-use macros_rs::crashln;
+use macros_rs::fs::folder_exists;
 use maid::log::prelude::*;
 use std::{fs::write, fs::File, path::PathBuf};
 use tar::{Archive, Builder};
@@ -21,12 +19,12 @@ fn append_to_tar(builder: &mut Builder<GzEncoder<File>>, path: &String) -> Resul
 
 pub fn remove_tar(file: &String) {
     if let Err(_) = std::fs::remove_file(file) {
-        crashln!("Unable to remove temporary archive. does it exist?");
+        error!("Unable to remove temporary archive. does it exist?");
     }
 }
 
 pub fn read_tar(archive: &Vec<u8>) -> Result<String, std::io::Error> {
-    if !helpers::Exists::folder(global!("maid.temp_dir")).unwrap() {
+    if !folder_exists!(&global!("maid.temp_dir")) {
         std::fs::create_dir_all(global!("maid.temp_dir")).unwrap();
         debug!("created maid temp dir");
     }
@@ -46,7 +44,7 @@ pub fn unpack_tar(path: &String) -> std::io::Result<()> {
 }
 
 pub fn write_tar(files: &Vec<String>) -> Result<String, std::io::Error> {
-    if !helpers::Exists::folder(global!("maid.temp_dir")).unwrap() {
+    if !folder_exists!(&global!("maid.temp_dir")) {
         std::fs::create_dir_all(global!("maid.temp_dir")).unwrap();
         debug!("created maid temp dir");
     }

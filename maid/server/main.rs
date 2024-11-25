@@ -6,7 +6,7 @@ mod table;
 
 use bollard::{Docker, API_DEFAULT_VERSION};
 use docker::container;
-use macros_rs::{fmtstr, ternary};
+use macros_rs::{exp::ternary, fmt::fmtstr};
 use maid::log::prelude::*;
 use rocket::futures::SinkExt;
 use rocket::{get, http::Status, launch, outcome::Outcome, routes, State};
@@ -64,7 +64,7 @@ impl From<Response> for Message {
 }
 
 #[derive(Debug)]
-struct Token(String);
+struct Token;
 
 #[rocket::async_trait]
 impl<'r> rocket::request::FromRequest<'r> for Token {
@@ -76,8 +76,7 @@ impl<'r> rocket::request::FromRequest<'r> for Token {
 
         if let Some(header_value) = authorization_header {
             if header_value == fmtstr!("Bearer {token}") {
-                let token = header_value.trim_start_matches("Bearer ").to_owned();
-                return Outcome::Success(Token(token));
+                return Outcome::Success(Token);
             }
         }
 

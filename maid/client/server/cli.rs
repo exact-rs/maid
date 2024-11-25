@@ -1,9 +1,10 @@
-use crate::helpers;
+use crate::parse;
 use crate::server;
-use crate::structs::{ConnectionData, ConnectionInfo, Kind, Level, Maidfile, Task, Websocket};
 
-use macros_rs::{crashln, fmtstr};
-use maid::log::prelude::*;
+use maid::models::client::{ConnectionData, ConnectionInfo, Kind, Level, Maidfile, Task, Websocket};
+use maid::{helpers, log::prelude::*};
+
+use macros_rs::fmt::fmtstr;
 use reqwest::blocking::Client;
 use tungstenite::protocol::frame::{coding::CloseCode::Normal, CloseFrame};
 use tungstenite::{client::connect_with_config, client::IntoClientRequest, protocol::WebSocketConfig, Message};
@@ -26,7 +27,7 @@ fn health(client: Client, values: Maidfile) -> server::api::health::Route {
 }
 
 pub fn connect(path: &String) {
-    let values = helpers::maidfile::merge(path);
+    let values = parse::merge(path);
     let client = Client::new();
     let body = health(client, values);
 
@@ -53,18 +54,18 @@ pub fn remote(task: Task) {
     if task.script.is_str() {
         match task.script.as_str() {
             Some(cmd) => script.push(cmd),
-            None => crashln!("Unable to parse maidfile. Missing string value."),
+            None => error!("Unable to parse Maidfile. Missing string value."),
         };
     } else if task.script.is_array() {
         match IntoIterator::into_iter(match task.script.as_array() {
             Some(iter) => iter,
-            None => crashln!("Unable to parse maidfile. Missing array value."),
+            None => error!("Unable to parse Maidfile. Missing array value."),
         }) {
             mut iter => loop {
                 match Iterator::next(&mut iter) {
                     Some(val) => match val.as_str() {
                         Some(cmd) => script.push(cmd),
-                        None => crashln!("Unable to parse maidfile. Missing string value."),
+                        None => error!("Unable to parse Maidfile. Missing string value."),
                     },
                     None => break,
                 };
@@ -109,9 +110,7 @@ pub fn remote(task: Task) {
 
     let file_name = match server::file::write_tar(&task.remote.unwrap().push) {
         Ok(name) => name,
-        Err(err) => {
-            crashln!("Unable to create archive.\nError: {err}")
-        }
+        Err(err) => error!(%err, "Unable to create archive"),
     };
 
     debug!("sending information");
@@ -131,13 +130,11 @@ pub fn remote(task: Task) {
             Ok(Message::Binary(archive)) => {
                 let archive_name = match server::file::read_tar(&archive) {
                     Ok(name) => name,
-                    Err(err) => {
-                        crashln!("Unable to read archive.\nError: {err}")
-                    }
+                    Err(err) => error!(%err, "Unable to read archive"),
                 };
 
                 if let Err(err) = server::file::unpack_tar(&archive_name) {
-                    crashln!("Unable to create archive.\nError: {err}")
+                    error!(%err, "Unable to create archive")
                 }
 
                 server::file::remove_tar(&archive_name);
@@ -160,6 +157,6 @@ pub fn remote(task: Task) {
         // run.rs:96 implement that later
         reason: std::borrow::Cow::Borrowed("finished task successfully"),
     })) {
-        crashln!("Unable to close socket.\nError: {err}")
+        error!(%err, "Unable to close socket")
     };
 }

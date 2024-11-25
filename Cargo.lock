@@ -1467,9 +1467,12 @@ dependencies = [
 
 [[package]]
 name = "macros-rs"
-version = "0.5.2"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb1feaac5c34086868f3f439dabbd71baf6a785f256aacdde7c66c95b56b12d6"
+checksum = "9cfca1250b52a785fbe49de29612471f59592b6b659159dcfcb976af08c803b4"
+dependencies = [
+ "termcolor",
+]
 
 [[package]]
 name = "maid"

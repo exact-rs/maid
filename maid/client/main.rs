@@ -4,8 +4,6 @@ mod helpers;
 mod parse;
 mod server;
 mod shell;
-mod structs;
-mod table;
 mod task;
 
 use maid::log::{
@@ -14,7 +12,7 @@ use maid::log::{
 };
 
 use clap::{Parser, ValueEnum};
-use macros_rs::str;
+use macros_rs::fmt::str;
 use std::path::Path;
 
 macro_rules! dispatch {

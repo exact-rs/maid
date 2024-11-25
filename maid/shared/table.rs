@@ -1,8 +1,8 @@
 use crate::helpers;
-use crate::structs::Maidfile;
-use maid::log::prelude::*;
+use crate::log::prelude::*;
+use crate::models::client::Maidfile;
 
-use macros_rs::{str, ternary};
+use macros_rs::{exp::ternary, fmt::str};
 use std::path::PathBuf;
 use std::{collections::BTreeMap, collections::HashMap, env};
 use text_placeholder::Template;

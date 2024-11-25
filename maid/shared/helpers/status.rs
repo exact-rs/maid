@@ -1,4 +1,4 @@
-use maid::log::prelude::*;
+use crate::log::prelude::*;
 use std::{io::Error, process::ExitStatus};
 
 pub fn error(debug_err: &str) {

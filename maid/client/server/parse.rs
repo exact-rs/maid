@@ -1,5 +1,5 @@
-use crate::structs::Maidfile;
-use macros_rs::{string, ternary};
+use macros_rs::{exp::ternary, fmt::string};
+use maid::models::client::Maidfile;
 
 pub fn address(values: &Maidfile) -> String {
     match &values.project {

@@ -1,16 +1,14 @@
 use crate::cli;
-use crate::helpers;
 use crate::parse;
-use crate::structs;
-use crate::table;
 
 use inquire::Select;
-use macros_rs::{string, ternary};
+use macros_rs::{exp::ternary, fmt::string};
 use maid::log::prelude::*;
+use maid::{models::client::DisplayTask, table};
 use text_placeholder::Template;
 
 pub fn json(path: &String, args: &Vec<String>, hydrate: bool) {
-    let values = helpers::maidfile::merge(path);
+    let values = parse::merge(path);
     let project_root = parse::file::find_maidfile_root(path);
     let json = values.clone().to_json();
     let table = table::create(values.clone(), args, project_root);
@@ -22,7 +20,7 @@ pub fn json(path: &String, args: &Vec<String>, hydrate: bool) {
 pub struct List;
 impl List {
     pub fn all(path: &String, silent: bool, log_level: Option<tracing::Level>, force: bool) {
-        let values = helpers::maidfile::merge(path);
+        let values = parse::merge(path);
         let mut options: Vec<_> = values
             .tasks
             .iter()
@@ -51,7 +49,7 @@ impl List {
                     },
                 };
 
-                return structs::DisplayTask {
+                return DisplayTask {
                     name: key.clone(),
                     formatted: format!("{} {} {}", format!("{key}").bright_yellow(), info, verbose.bright_blue()),
                     hidden: hidden.clone(),
@@ -71,7 +69,7 @@ impl List {
     }
 
     pub fn remote(path: &String, silent: bool, log_level: Option<tracing::Level>) {
-        let values = helpers::maidfile::merge(path);
+        let values = parse::merge(path);
         let mut options: Vec<_> = values
             .tasks
             .iter()
@@ -94,7 +92,7 @@ impl List {
                     None => true,
                 };
 
-                return structs::DisplayTask {
+                return DisplayTask {
                     name: key.clone(),
                     formatted: format!("{} {} {}", format!("{key}").bright_yellow(), info, verbose.bright_blue()),
                     hidden: hidden.clone(),

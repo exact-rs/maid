@@ -1,14 +1,12 @@
-use maid::log::prelude::*;
+use maid::models::client::{Cache, Runner};
+use maid::{helpers, log::prelude::*, table};
 
 use crate::cli;
-use crate::helpers;
 use crate::shell::IntoArgs;
-use crate::structs::{Cache, Runner};
-use crate::table;
 
 use fs_extra::dir::get_size;
 use human_bytes::human_bytes;
-use macros_rs::{crashln, string};
+
 use std::env;
 use std::io::Error;
 use std::path::Path;
@@ -71,7 +69,7 @@ fn run_script(runner: Runner) {
 
     let cache = match &runner.maidfile.tasks[runner.name].cache {
         Some(cache) => cache.clone(),
-        None => Cache { path: string!(""), target: vec![] },
+        None => Cache { path: "".to_string(), target: vec![] },
     };
 
     let exit_code = helpers::status::code(status);
@@ -128,18 +126,18 @@ pub fn task(task: cli::Task) {
     if task.script.is_str() {
         match task.script.as_str() {
             Some(cmd) => script.push(cmd),
-            None => crashln!("Unable to parse maidfile. Missing string value."),
+            None => error!("Unable to parse Maidfile. Missing string value."),
         };
     } else if task.script.is_array() {
         match IntoIterator::into_iter(match task.script.as_array() {
             Some(iter) => iter,
-            None => crashln!("Unable to parse maidfile. Missing array value."),
+            None => error!("Unable to parse Maidfile. Missing array value."),
         }) {
             mut iter => loop {
                 match Iterator::next(&mut iter) {
                     Some(val) => match val.as_str() {
                         Some(cmd) => script.push(cmd),
-                        None => crashln!("Unable to parse maidfile. Missing string value."),
+                        None => error!("Unable to parse Maidfile. Missing string value."),
                     },
                     None => break,
                 };

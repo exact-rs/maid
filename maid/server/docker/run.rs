@@ -16,10 +16,14 @@ use bytes::Bytes;
 use flate2::{write::GzEncoder, Compression};
 use futures_core::Stream;
 use futures_util::{stream::TryStreamExt, SinkExt, StreamExt};
-use macros_rs::{fmtstr, str, string, then};
 use rocket_ws::{stream::DuplexStream, Message};
 use std::{default::Default, io::Write, path::PathBuf};
 use text_placeholder::Template;
+
+use macros_rs::{
+    exp::then,
+    fmt::{fmtstr, str, string},
+};
 
 use bollard::{
     container::{Config, DownloadFromContainerOptions, RemoveContainerOptions, UploadToContainerOptions},

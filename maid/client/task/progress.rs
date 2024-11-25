@@ -1,5 +1,5 @@
 use indicatif::{ProgressBar, ProgressStyle};
-use macros_rs::fmtstr;
+use macros_rs::fmt::fmtstr;
 
 pub fn init(ticks: Vec<&str>, template: &str, tick: u64) -> ProgressBar {
     let pb = ProgressBar::new_spinner();
