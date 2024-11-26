@@ -16,7 +16,7 @@ use maid::{
 use fs_extra::dir::get_size;
 use global_placeholders::global;
 use human_bytes::human_bytes;
-use std::{env, path::Path, time::Instant};
+use std::{env, fs, path::Path, time::Instant};
 
 use macros_rs::{
     exp::ternary,
@@ -157,7 +157,7 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
 
         if !cache.path.trim().is_empty() && !cache.target.is_empty() && !is_remote {
             if !folder_exists!(&global!("maid.cache_dir", task)) {
-                std::fs::create_dir_all(global!("maid.cache_dir", task)).unwrap();
+                fs::create_dir_all(global!("maid.cache_dir", task)).unwrap();
                 debug!("created maid cache dir");
             }
 
@@ -165,7 +165,7 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
             let config_path = format!(".maid/cache/{task}/{}.toml", task);
 
             if !file_exists!(&config_path) {
-                match std::fs::write(
+                match fs::write(
                     config_path.clone(),
                     toml::to_string(&CacheConfig {
                         target: cache.target.clone(),
@@ -178,7 +178,7 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
                 };
             }
 
-            let contents = match std::fs::read_to_string(config_path.clone()) {
+            let contents = match fs::read_to_string(config_path.clone()) {
                 Ok(content) => content,
                 Err(err) => error!(%err, "Cannot read cache config"),
             };
@@ -197,18 +197,24 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
                     println!(
                         "{} ({})",
                         format!("copied target '{}' from cache", target.clone()).magenta(),
-                        format!("{}", human_bytes(get_size(cache_file.clone()).unwrap() as f64).white())
+                        format!("{}", human_bytes(get_size(cache_file.clone()).unwrap_or_default() as f64).white())
                     );
 
-                    match std::fs::copy(Path::new(&cache_file), target.clone()) {
+                    match fs::copy(Path::new(&cache_file), target.to_owned()) {
                         Ok(_) => debug!("copied target file {}", target),
-                        Err(err) => error!(%err, "Cannot copy target file."),
+                        Err(_) => {
+                            println!("");
+                            match fs::remove_dir_all(format!(".maid/cache/{task}")) {
+                                Ok(_) => warn!("Cannot copy target file, rebuilt build cache"),
+                                Err(_) => error!("Build cache does not exist, cannot remove"),
+                            }
+                        }
                     };
                 }
 
                 std::process::exit(0);
             } else {
-                match std::fs::write(
+                match fs::write(
                     config_path.clone(),
                     toml::to_string(&CacheConfig {
                         target: cache.target,
