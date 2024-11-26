@@ -7,13 +7,13 @@ use maid::{
 
 use std::{
     env,
-    io::Error,
+    io::{BufRead, BufReader, Error},
     path::Path,
     process::{Child, Command, ExitStatus, Stdio},
     time::Instant,
 };
 
-use crate::shell::IntoArgs;
+use crate::{shell::IntoArgs, task};
 use fs_extra::dir::get_size;
 use human_bytes::human_bytes;
 use text_placeholder::Template;
@@ -47,15 +47,32 @@ pub(crate) fn run_wrapped(runner: Runner<toml::Value>) {
 
         if runner.dep.active {
             let is_verbose = runner.dep.verbose;
+            let pb = task::progress::get().unwrap();
 
             cmd = match Command::new(&name)
-                .stdout(if is_verbose { Stdio::inherit() } else { Stdio::null() })
-                .stderr(if is_verbose { Stdio::inherit() } else { Stdio::null() })
-                .stdin(if is_verbose { Stdio::inherit() } else { Stdio::null() })
+                .stdout(if is_verbose { Stdio::piped() } else { Stdio::null() })
+                .stderr(if is_verbose { Stdio::piped() } else { Stdio::null() })
+                .stdin(Stdio::null())
                 .args(args.to_owned())
                 .spawn()
             {
-                Ok(output) => output,
+                Ok(mut child) => {
+                    if let (Some(stdout), Some(stderr)) = (child.stdout.take(), child.stderr.take()) {
+                        let stdout = BufReader::new(stdout);
+                        let stderr = BufReader::new(stderr);
+                        let name = format!("[{}]", runner.name).white();
+
+                        std::thread::spawn(move || {
+                            stdout
+                                .lines()
+                                .chain(stderr.lines())
+                                .filter_map(Result::ok)
+                                .filter(|_| is_verbose)
+                                .for_each(|line| pb.println(format!("{name} {line}")));
+                        });
+                    }
+                    child
+                }
                 Err(err) => error!(%err, "Cannot start command {name}."),
             };
         } else {
@@ -66,7 +83,7 @@ pub(crate) fn run_wrapped(runner: Runner<toml::Value>) {
                 .stdin(Stdio::inherit())
                 .spawn()
             {
-                Ok(output) => output,
+                Ok(child) => child,
                 Err(err) => error!(%err, "Cannot start command {name}."),
             };
         }

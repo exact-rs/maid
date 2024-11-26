@@ -128,19 +128,19 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
 
                         pb.set_prefix(format!("[{}/{}]", index + 1, deps.len()));
                         pb.set_message(fmtstr!("{} {name}", "running dependency".bright_yellow()));
+
                         exec(&name, args, path, true, true, is_remote, log_level, force, is_verbose_dep);
                     }
 
                     if !is_dep {
-                        pb.suspend(|| {
-                            println!(
-                                "{} {} in {} {}\n",
-                                maid::colors::OK,
-                                format!("finished {} {}", deps.len(), ternary!(deps.len() > 1, "dependencies", "dependency")).bright_green(),
-                                format!("{:.2?}", start.elapsed()).yellow(),
-                                format!("[{}]", deps.join(", ")).white()
-                            )
-                        });
+                        task::progress::finish();
+                        println!(
+                            "{} {} in {} {}\n",
+                            maid::colors::OK,
+                            format!("finished {} {}", deps.len(), ternary!(deps.len() > 1, "dependencies", "dependency")).bright_green(),
+                            format!("{:.2?}", start.elapsed()).yellow(),
+                            format!("[{}]", deps.join(", ")).white()
+                        )
                     }
                 }
                 None => {}
