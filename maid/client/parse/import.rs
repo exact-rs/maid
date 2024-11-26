@@ -1,9 +1,10 @@
 use crate::parse;
 use macros_rs::fmt::fmtstr;
-use maid::models::client::Maidfile;
+use maid::models::shared::Maidfile;
+use toml::Value;
 
-pub fn push(path_list: Option<Vec<String>>) -> Vec<Maidfile> {
-    let mut values: Vec<Maidfile> = vec![];
+pub fn push(path_list: Option<Vec<String>>) -> Vec<Maidfile<Value>> {
+    let mut values: Vec<Maidfile<Value>> = vec![];
 
     let mut add_values = |paths: Vec<String>| {
         for path in paths.iter() {

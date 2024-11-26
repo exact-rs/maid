@@ -1,8 +1,9 @@
 use maid::log::prelude::*;
-use maid::models::client::Maidfile;
+use maid::models::shared::Maidfile;
 
 use macros_rs::{exp::then, fmt::string};
 use std::{env, fs, io::Result, path::Path, path::PathBuf};
+use toml::Value;
 
 macro_rules! create_path {
     ($file_name:expr, $kind:expr) => {{
@@ -75,7 +76,7 @@ fn find_file(starting_directory: &Path, file_name: &String) -> Option<PathBuf> {
     return None;
 }
 
-fn read_file(path: PathBuf, kind: &str) -> Maidfile {
+fn read_file(path: PathBuf, kind: &str) -> Maidfile<Value> {
     let contents = match fs::read_to_string(&path) {
         Ok(contents) => contents,
         Err(_) => error!("Cannot find Maidfile. Does it exist?"),
@@ -95,7 +96,7 @@ fn read_file(path: PathBuf, kind: &str) -> Maidfile {
     }
 }
 
-pub fn read_maidfile_with_error(filename: &String, error: &str) -> Maidfile {
+pub fn read_maidfile_with_error(filename: &String, error: &str) -> Maidfile<Value> {
     match env::current_dir() {
         Ok(path) => match find_file(&path, &filename) {
             Some(path) => {
@@ -127,4 +128,4 @@ pub fn find_maidfile_root(filename: &String) -> PathBuf {
     }
 }
 
-pub fn read_maidfile(filename: &String) -> Maidfile { read_maidfile_with_error(filename, "Cannot find maidfile. Does it exist?") }
+pub fn read_maidfile(filename: &String) -> Maidfile<Value> { read_maidfile_with_error(filename, "Cannot find maidfile. Does it exist?") }

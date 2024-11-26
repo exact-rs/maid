@@ -21,7 +21,7 @@ pub(crate) fn watch(path: &Path) {
     }
 }
 
-pub(crate) fn update() {
+pub(crate) fn check_update() {
     let checker = match blocking::get("https://api.maid.ci/versions/latest") {
         Ok(res) => res.json::<UpdateData>(),
         Err(err) => error!(%err, "Unable to check for updates"),
@@ -35,7 +35,7 @@ pub(crate) fn update() {
     if version == env!("CARGO_PKG_VERSION") {
         info!("Maid is currently on the latest version")
     } else {
-        warn!("Your install is currently out of date.\n\nThe current version is {version}\nPlease update from https://maid.ci/install")
+        warn!("Your install is currently out of date.\n\nThe current version is {version}\nPlease update using `maid upgrade`")
     }
 }
 

@@ -1,15 +1,22 @@
 use crate::parse;
 use crate::server;
 
-use maid::models::client::{ConnectionData, ConnectionInfo, Kind, Level, Maidfile, Task, Websocket};
-use maid::{helpers, log::prelude::*};
+use maid::{
+    helpers,
+    log::prelude::*,
+    models::{
+        client::{ConnectionData, ConnectionInfo, Kind, Level, Task, Websocket},
+        shared::Maidfile,
+    },
+};
 
 use macros_rs::fmt::fmtstr;
 use reqwest::blocking::Client;
+use toml::Value;
 use tungstenite::protocol::frame::{coding::CloseCode::Normal, CloseFrame};
 use tungstenite::{client::connect_with_config, client::IntoClientRequest, protocol::WebSocketConfig, Message};
 
-fn health(client: Client, values: Maidfile) -> server::api::health::Route {
+fn health(client: Client, values: Maidfile<Value>) -> server::api::health::Route {
     let address = server::parse::address(&values);
     let token = server::parse::token(&values);
 
@@ -48,7 +55,7 @@ pub fn connect(path: &String) {
     );
 }
 
-pub fn remote(task: Task) {
+pub fn remote(task: Task<Value>) {
     let mut script: Vec<&str> = vec![];
 
     if task.script.is_str() {

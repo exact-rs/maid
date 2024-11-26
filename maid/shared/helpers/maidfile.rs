@@ -1,7 +1,7 @@
 use crate::log::prelude::*;
-use crate::models::client::{DisplayTask, Maidfile};
+use crate::models::{client::DisplayTask, shared::Maidfile};
 
-impl Maidfile {
+impl<T: serde::Serialize> Maidfile<T> {
     pub fn to_json(&self) -> String {
         match serde_json::to_string(&self) {
             Ok(contents) => contents,

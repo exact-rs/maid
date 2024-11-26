@@ -81,7 +81,9 @@ struct Cli {
 #[derive(ValueEnum, Clone)]
 enum System {
     /// Check for new Maid updates
-    Update,
+    CheckUpdates,
+    /// Upgrade Maid to the latest version
+    Upgrade,
     /// Return the Maidfile in json
     Json,
     /// Hydrate json with environment fields
@@ -130,7 +132,8 @@ fn main() {
 
     if let Some(system) = cli.system {
         return match system {
-            System::Update => cli::dispatch::update(),
+            System::CheckUpdates => cli::dispatch::check_update(),
+            System::Upgrade => cli::dispatch::check_update(),
             System::Json => cli::tasks::list_json(&cli.path, &cli.task, false),
             System::JsonHydrated => cli::tasks::list_json(&cli.path, &cli.task, true),
         };

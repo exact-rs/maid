@@ -1,64 +1,6 @@
+use crate::models::shared::{Maidfile, Remote};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::path::PathBuf;
-use toml::Value;
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Maidfile {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub import: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub env: Option<BTreeMap<String, Value>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub project: Option<Project>,
-    pub tasks: BTreeMap<String, Tasks>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Project {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub server: Option<Server>, // wip
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Server {
-    pub address: Address, // wip
-    pub token: String,    // wip
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Address {
-    pub host: String,
-    pub port: i64,
-    pub ssl: bool,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Tasks {
-    pub script: Value,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hide: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub path: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub info: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cache: Option<Cache>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub remote: Option<Remote>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub depends: Option<Vec<String>>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Cache {
-    pub path: String,
-    pub target: Vec<String>,
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CacheConfig {
@@ -67,23 +9,13 @@ pub struct CacheConfig {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Remote {
-    pub push: Vec<String>,
-    pub pull: String,
-    pub image: String,
-    pub shell: String,
-    pub silent: bool,
-    pub exclusive: bool,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Task {
-    pub maidfile: Maidfile,
+pub struct Task<T> {
+    pub maidfile: Maidfile<T>,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remote: Option<Remote>,
     pub project: PathBuf,
-    pub script: Value,
+    pub script: T,
     pub path: String,
     pub args: Vec<String>,
     pub silent: bool,
@@ -91,8 +23,8 @@ pub struct Task {
 }
 
 #[derive(Clone, Debug)]
-pub struct Runner<'a> {
-    pub maidfile: &'a Maidfile,
+pub struct Runner<'a, T> {
+    pub maidfile: &'a Maidfile<T>,
     pub name: &'a String,
     pub script: Vec<&'a str>,
     pub path: &'a String,
@@ -147,9 +79,9 @@ pub struct ConnectionInfo {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ConnectionData {
+pub struct ConnectionData<T> {
     pub info: ConnectionInfo,
-    pub maidfile: Maidfile,
+    pub maidfile: Maidfile<T>,
 }
 
 #[derive(Deserialize)]

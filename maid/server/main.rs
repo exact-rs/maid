@@ -1,8 +1,6 @@
 mod docker;
 mod globals;
 mod helpers;
-mod structs;
-mod table;
 
 use bollard::{Docker, API_DEFAULT_VERSION};
 use docker::container;

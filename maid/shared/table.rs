@@ -1,16 +1,15 @@
 use crate::helpers;
 use crate::log::prelude::*;
-use crate::models::client::Maidfile;
+use crate::models::shared::Maidfile;
 
 use macros_rs::{exp::ternary, fmt::str};
 use std::path::PathBuf;
 use std::{collections::BTreeMap, collections::HashMap, env};
 use text_placeholder::Template;
-use toml::Value;
 
-pub fn create(values: Maidfile, args: &Vec<String>, project: PathBuf) -> HashMap<&str, &str> {
+pub fn create<T: ToString>(values: Maidfile<T>, args: &Vec<String>, project: PathBuf) -> HashMap<&str, &str> {
     let mut table = HashMap::new();
-    let empty_env: BTreeMap<String, Value> = BTreeMap::new();
+    let empty_env: BTreeMap<String, T> = BTreeMap::new();
 
     trace!(value = env::consts::OS, "os.platform");
     trace!(value = env::consts::ARCH, "os.arch");

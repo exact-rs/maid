@@ -6,8 +6,14 @@ use crate::parse;
 use crate::server;
 use crate::task;
 
-use maid::models::client::{Cache, CacheConfig, Project, Task};
-use maid::{helpers, log::prelude::*};
+use maid::{
+    helpers,
+    log::prelude::*,
+    models::{
+        client::{CacheConfig, Task},
+        shared::{Cache, Project},
+    },
+};
 
 use fs_extra::dir::get_size;
 use global_placeholders::global;

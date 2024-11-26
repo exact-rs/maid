@@ -1,20 +1,26 @@
-use maid::models::client::{Cache, Runner};
-use maid::{helpers, log::prelude::*, table};
-
-use crate::cli;
 use crate::shell::IntoArgs;
+
+use maid::{
+    helpers,
+    log::prelude::*,
+    models::{
+        client::{Runner, Task},
+        shared::Cache,
+    },
+    table,
+};
 
 use fs_extra::dir::get_size;
 use human_bytes::human_bytes;
-
 use std::env;
 use std::io::Error;
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::time::Instant;
 use text_placeholder::Template;
+use toml::Value;
 
-fn run_script(runner: Runner) {
+fn run_script(runner: Runner<Value>) {
     let mut cmd: Child;
     let start = Instant::now();
     let mut status_array: Vec<Result<ExitStatus, Error>> = vec![];
@@ -120,7 +126,7 @@ fn run_script(runner: Runner) {
     }
 }
 
-pub(crate) fn task(task: cli::Task) {
+pub(crate) fn task(task: Task<Value>) {
     let mut script: Vec<&str> = vec![];
 
     if task.script.is_str() {

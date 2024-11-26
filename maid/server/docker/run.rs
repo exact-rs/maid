@@ -9,8 +9,8 @@ macro_rules! Handle {
     };
 }
 
-use crate::{structs::ConnectionData, table, Kind, Level, Response};
-use maid::log::prelude::*;
+use crate::{Kind, Level, Response};
+use maid::{log::prelude::*, models::server::ConnectionData, table};
 
 use bytes::Bytes;
 use flate2::{write::GzEncoder, Compression};

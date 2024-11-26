@@ -2,9 +2,10 @@ pub mod file;
 pub mod import;
 
 use maid::log::prelude::*;
-use maid::models::client::Maidfile;
+use maid::models::shared::Maidfile;
+use toml::Value;
 
-pub(crate) fn merge(path: &String) -> Maidfile {
+pub(crate) fn merge(path: &String) -> Maidfile<Value> {
     let mut values = file::read_maidfile(path);
     let imported_values = import::push(values.import.clone());
 
