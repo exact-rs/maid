@@ -111,7 +111,7 @@ fn main() {
         health => server::cli::connect(&cli.path),
         health => match cli.remote {
             true => server::cli::connect(&cli.path),
-            false => server::cli::connect(&cli.path), // improve health command for later
+            false => {}, // improve health command for later
         },
         clean_cache => match cli.remote {
             true => server::cli::connect(&cli.path),
@@ -133,7 +133,7 @@ fn main() {
     if let Some(system) = cli.system {
         return match system {
             System::CheckUpdates => cli::dispatch::check_update(),
-            System::Upgrade => cli::dispatch::check_update(),
+            System::Upgrade => {} // add upgrader
             System::Json => cli::tasks::list_json(&cli.path, &cli.task, false),
             System::JsonHydrated => cli::tasks::list_json(&cli.path, &cli.task, true),
         };

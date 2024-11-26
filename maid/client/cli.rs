@@ -2,9 +2,7 @@ pub(crate) mod dispatch;
 pub(crate) mod run;
 pub(crate) mod tasks;
 
-use crate::parse;
-use crate::server;
-use crate::task;
+use crate::{parse, server, task};
 
 use maid::{
     helpers,

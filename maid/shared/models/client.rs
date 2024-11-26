@@ -38,7 +38,6 @@ pub struct Runner<'a, T> {
 pub struct DisplayTask {
     pub name: String,
     pub formatted: String,
-    pub hidden: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]

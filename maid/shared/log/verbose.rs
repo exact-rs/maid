@@ -16,13 +16,12 @@ pub struct Verbosity<L: LogLevel = ErrorLevel> {
     #[arg(
         long,
         short = 'q',
-        action = clap::ArgAction::Count,
         global = true,
         help = L::quiet_help(),
         long_help = L::quiet_long_help(),
         conflicts_with = "verbose",
     )]
-    quiet: u8,
+    quiet: bool,
 
     #[arg(skip)]
     phantom: std::marker::PhantomData<L>,
@@ -30,7 +29,7 @@ pub struct Verbosity<L: LogLevel = ErrorLevel> {
 
 #[allow(dead_code)]
 impl<L: LogLevel> Verbosity<L> {
-    pub fn new(verbose: u8, quiet: u8) -> Self {
+    pub fn new(verbose: u8, quiet: bool) -> Self {
         Verbosity {
             verbose,
             quiet,
@@ -38,15 +37,19 @@ impl<L: LogLevel> Verbosity<L> {
         }
     }
 
-    pub fn is_present(&self) -> bool { self.verbose != 0 || self.quiet != 0 }
+    pub fn is_silent(&self) -> bool { self.log_level().is_none() }
 
     pub fn log_level(&self) -> Option<Level> { level_enum(self.verbosity()) }
 
     pub fn log_level_filter(&self) -> LevelFilter { return level_enum(self.verbosity()).map(LevelFilter::from_level).unwrap_or(LevelFilter::OFF); }
 
-    pub fn is_silent(&self) -> bool { self.log_level().is_none() }
-
-    fn verbosity(&self) -> i8 { level_value(L::default()) - (self.quiet as i8) + (self.verbose as i8) }
+    fn verbosity(&self) -> i8 {
+        if !self.quiet {
+            level_value(L::default()) + (self.verbose as i8)
+        } else {
+            -1
+        }
+    }
 }
 
 fn level_value(level: Option<Level>) -> i8 {

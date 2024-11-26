@@ -12,7 +12,7 @@ version = "2.0.0"
 # Build on a remote server
 [project.server]
 token = "test_token1"
-address = { host = "localhost", port = 3500, ssl = false }
+address = { host = "localhost", port = 3500, tls = false }
 
 # Global environment (applied to shell)
 [env]
