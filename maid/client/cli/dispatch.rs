@@ -1,5 +1,8 @@
-use maid::log::prelude::*;
-use maid::models::client::UpdateData;
+use maid::{
+    helpers,
+    log::prelude::*,
+    models::client::{Runner, Task, UpdateData},
+};
 
 use inquire::Text;
 use macros_rs::fs::file_exists;
@@ -87,4 +90,32 @@ pub(crate) fn init() {
     } else {
         println!("{}", "maidfile already exists, aborting".yellow())
     }
+}
+
+pub(crate) fn task(task: Task<toml::Value>) {
+    let mut script: Vec<String> = Vec::new();
+
+    if let Some(cmd) = task.script.as_str() {
+        script.push(cmd.to_string());
+    } else if let Some(array) = task.script.as_array() {
+        for value in array {
+            match value.as_str() {
+                Some(cmd) => script.push(cmd.to_string()),
+                None => error!("Unable to parse Maidfile. Missing string value."),
+            }
+        }
+    } else {
+        helpers::status::error(task.script.type_str());
+    }
+
+    super::script::run_wrapped(Runner {
+        script,
+        dep: task.dep,
+        name: task.name,
+        path: task.path,
+        args: task.args,
+        silent: task.silent,
+        project: task.project,
+        maidfile: task.maidfile,
+    });
 }

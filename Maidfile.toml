@@ -25,7 +25,7 @@ VERSION='2.0.0'
 # Advanced task definition 
 [tasks.build]
 info = "Build binaries"
-depends = ["clean"]
+depends = ["log:clean"]
 script = [
    "cargo zigbuild --release --no-default-features --features client --color always", 
    # "cargo zigbuild --release --all-features --color always", 
@@ -50,6 +50,6 @@ pull = "bin"
 
 # Basic task definition 
 [tasks]
-clean.script = ["rm -rf bin", "mkdir bin"]
-install.script =["maid build -q","sudo cp bin/maid /usr/local/bin", "maid -V"]
+clean.script = ["du -h bin", "rm -rf bin", "mkdir bin", "du -h bin"]
+install.script = ["maid build -q","sudo cp bin/maid /usr/local/bin", "maid -V"]
 api_server = { path = "bin", depends = ["build"], script = "./maid_server" }

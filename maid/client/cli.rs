@@ -1,5 +1,5 @@
 pub(crate) mod dispatch;
-pub(crate) mod run;
+pub(crate) mod script;
 pub(crate) mod tasks;
 
 use crate::{parse, server, task};
@@ -8,7 +8,7 @@ use maid::{
     helpers,
     log::prelude::*,
     models::{
-        client::{CacheConfig, Task},
+        client::{CacheConfig, Dependency, Task},
         shared::{Cache, Project},
     },
 };
@@ -83,7 +83,7 @@ pub(crate) fn env(path: &String) {
     }
 }
 
-pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<tracing::Level>, force: bool) {
+pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, is_dep: bool, is_remote: bool, log_level: Option<tracing::Level>, force: bool, log_deps: bool) {
     debug!("Starting maid {}", env!("CARGO_PKG_VERSION"));
 
     if task.is_empty() {
@@ -123,9 +123,12 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
                     let pb = task::progress::init(ticks, template, 80);
 
                     for (index, item) in deps.iter().enumerate() {
+                        let is_verbose_dep = item.starts_with("log:");
+                        let name = item.strip_prefix("log:").unwrap_or(item.as_str());
+
                         pb.set_prefix(format!("[{}/{}]", index + 1, deps.len()));
-                        pb.set_message(fmtstr!("{} {item}", "running dependency".bright_yellow()));
-                        exec(&item, args, path, true, true, is_remote, log_level, force);
+                        pb.set_message(fmtstr!("{} {name}", "running dependency".bright_yellow()));
+                        exec(&name, args, path, true, true, is_remote, log_level, force, is_verbose_dep);
                     }
 
                     if !is_dep {
@@ -244,6 +247,7 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
 
         if is_remote {
             server::cli::remote(Task {
+                silent,
                 maidfile: values.clone(),
                 name: string!(task),
                 project: project_root,
@@ -251,11 +255,11 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
                 script: values.tasks[task].script.clone(),
                 path: task_path.clone(),
                 args: args.clone(),
-                silent,
-                is_dep,
+                dep: Dependency { active: is_dep, verbose: log_deps },
             });
         } else {
-            run::task(Task {
+            dispatch::task(Task {
+                silent,
                 maidfile: values.clone(),
                 name: string!(task),
                 project: project_root,
@@ -263,8 +267,7 @@ pub(crate) fn exec(task: &str, args: &Vec<String>, path: &String, silent: bool, 
                 script: values.tasks[task].script.clone(),
                 path: task_path.clone(),
                 args: args.clone(),
-                silent,
-                is_dep,
+                dep: Dependency { active: is_dep, verbose: log_deps },
             });
         }
     }

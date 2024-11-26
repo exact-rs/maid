@@ -63,7 +63,7 @@ pub(crate) fn list_all(path: &String, silent: bool, log_level: Option<Level>, fo
     match Select::new("Select a task to run:", options).prompt() {
         Ok(task) => {
             debug!("Starting {}", task.name);
-            cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, false, log_level, force);
+            cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, false, log_level, force, false);
         }
 
         Err(_) => println!("{}", "Aborting...".white()),
@@ -76,7 +76,7 @@ pub(crate) fn list_remote(path: &String, silent: bool, log_level: Option<Level>)
     match Select::new("Select a remote task to run:", options).prompt() {
         Ok(task) => {
             debug!("Starting {}", task.name);
-            cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, true, log_level, false);
+            cli::exec(&String::from(task.name), &vec![String::from("")], &path, silent, false, true, log_level, false, false);
         }
 
         Err(_) => println!("{}", "Aborting...".white()),

@@ -19,19 +19,25 @@ pub struct Task<T> {
     pub path: String,
     pub args: Vec<String>,
     pub silent: bool,
-    pub is_dep: bool,
+    pub dep: Dependency,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Dependency {
+    pub active: bool,
+    pub verbose: bool,
 }
 
 #[derive(Clone, Debug)]
-pub struct Runner<'a, T> {
-    pub maidfile: &'a Maidfile<T>,
-    pub name: &'a String,
-    pub script: Vec<&'a str>,
-    pub path: &'a String,
-    pub args: &'a Vec<String>,
-    pub project: &'a PathBuf,
+pub struct Runner<T> {
+    pub maidfile: Maidfile<T>,
+    pub name: String,
+    pub script: Vec<String>,
+    pub path: String,
+    pub args: Vec<String>,
+    pub project: PathBuf,
     pub silent: bool,
-    pub is_dep: bool,
+    pub dep: Dependency,
 }
 
 #[derive(Debug)]

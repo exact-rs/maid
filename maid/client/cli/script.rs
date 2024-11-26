@@ -1,61 +1,71 @@
-use crate::shell::IntoArgs;
-
 use maid::{
     helpers,
     log::prelude::*,
-    models::{
-        client::{Runner, Task},
-        shared::Cache,
-    },
+    models::{client::Runner, shared::Cache},
     table,
 };
 
+use std::{
+    env,
+    io::Error,
+    path::Path,
+    process::{Child, Command, ExitStatus, Stdio},
+    time::Instant,
+};
+
+use crate::shell::IntoArgs;
 use fs_extra::dir::get_size;
 use human_bytes::human_bytes;
-use std::env;
-use std::io::Error;
-use std::path::Path;
-use std::process::{Child, Command, ExitStatus, Stdio};
-use std::time::Instant;
 use text_placeholder::Template;
-use toml::Value;
 
-fn run_script(runner: Runner<Value>) {
-    let mut cmd: Child;
+pub(crate) fn run_wrapped(runner: Runner<toml::Value>) {
     let start = Instant::now();
+
+    let mut cmd: Child;
     let mut status_array: Vec<Result<ExitStatus, Error>> = vec![];
 
-    for string in runner.script.clone() {
+    for string in runner.script {
         let start = Instant::now();
-        let table = table::create(runner.maidfile.clone(), runner.args, runner.project.clone());
-        let script = Template::new_with_placeholder(string, "%{", "}").fill_with_hashmap(&table);
-        let (name, args) = match script.try_into_args() {
-            Ok(result) => {
-                let mut args = result.clone();
 
-                args.remove(0);
-                (result[0].clone(), args)
-            }
+        let working_dir = runner.project.join(Path::new(&runner.path));
+        let table = table::create(runner.maidfile.to_owned(), &runner.args, runner.project.to_owned());
+        let script = Template::new_with_placeholder(&string, "%{", "}").fill_with_hashmap(&table);
+
+        let (name, args) = match script.try_into_args() {
+            Ok(mut args) => (args.remove(0), args),
             Err(err) => error!(%err, "Script could not be parsed into args"),
         };
 
-        debug!("Original Script: {}", string);
-        debug!("Parsed Script: {}", script);
+        debug!("Original Script: {string}");
+        debug!("Parsed Script: {script}");
         debug!("Execute Command: '{name} {}'", args.join(" "));
 
-        let working_dir = runner.project.join(&Path::new(runner.path));
         match env::set_current_dir(&working_dir) {
-            Ok(_) => debug!("Working directory: {:?}", &working_dir),
-            Err(err) => error!(%err, "Failed to set working directory {:?}", &working_dir),
+            Ok(_) => debug!("Working directory: {working_dir:?}"),
+            Err(err) => error!(%err, "Failed to set working directory {working_dir:?}"),
         };
 
-        if runner.is_dep {
-            cmd = match Command::new(&name).stdout(Stdio::null()).stderr(Stdio::null()).stdin(Stdio::null()).args(args.clone()).spawn() {
+        if runner.dep.active {
+            let is_verbose = runner.dep.verbose;
+
+            cmd = match Command::new(&name)
+                .stdout(if is_verbose { Stdio::inherit() } else { Stdio::null() })
+                .stderr(if is_verbose { Stdio::inherit() } else { Stdio::null() })
+                .stdin(if is_verbose { Stdio::inherit() } else { Stdio::null() })
+                .args(args.to_owned())
+                .spawn()
+            {
                 Ok(output) => output,
                 Err(err) => error!(%err, "Cannot start command {name}."),
             };
         } else {
-            cmd = match Command::new(&name).args(args.clone()).stdout(Stdio::inherit()).stderr(Stdio::inherit()).stdin(Stdio::inherit()).spawn() {
+            cmd = match Command::new(&name)
+                .args(args.to_owned())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .stdin(Stdio::inherit())
+                .spawn()
+            {
                 Ok(output) => output,
                 Err(err) => error!(%err, "Cannot start command {name}."),
             };
@@ -73,7 +83,7 @@ fn run_script(runner: Runner<Value>) {
         None => error!("Failed to fetch final status code."),
     };
 
-    let cache = match &runner.maidfile.tasks[runner.name].cache {
+    let cache = match &runner.maidfile.tasks[&runner.name].cache {
         Some(cache) => cache.clone(),
         None => Cache { path: "".to_string(), target: vec![] },
     };
@@ -124,43 +134,4 @@ fn run_script(runner: Runner<Value>) {
             }
         }
     }
-}
-
-pub(crate) fn task(task: Task<Value>) {
-    let mut script: Vec<&str> = vec![];
-
-    if task.script.is_str() {
-        match task.script.as_str() {
-            Some(cmd) => script.push(cmd),
-            None => error!("Unable to parse Maidfile. Missing string value."),
-        };
-    } else if task.script.is_array() {
-        match IntoIterator::into_iter(match task.script.as_array() {
-            Some(iter) => iter,
-            None => error!("Unable to parse Maidfile. Missing array value."),
-        }) {
-            mut iter => loop {
-                match Iterator::next(&mut iter) {
-                    Some(val) => match val.as_str() {
-                        Some(cmd) => script.push(cmd),
-                        None => error!("Unable to parse Maidfile. Missing string value."),
-                    },
-                    None => break,
-                };
-            },
-        }
-    } else {
-        helpers::status::error(task.script.type_str())
-    }
-
-    run_script(Runner {
-        name: &task.name,
-        path: &task.path,
-        args: &task.args,
-        silent: task.silent,
-        is_dep: task.is_dep,
-        project: &task.project,
-        maidfile: &task.maidfile,
-        script,
-    });
 }

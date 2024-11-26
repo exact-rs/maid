@@ -143,5 +143,15 @@ fn main() {
         return cli::dispatch::watch(Path::new(&path)); // migrate watch path into executer below
     }
 
-    cli::exec(cli.task[0].trim(), &cli.task, &cli.path, cli.verbose.is_silent(), false, cli.remote, cli.verbose.log_level(), cli.force)
+    cli::exec(
+        cli.task[0].trim(),
+        &cli.task,
+        &cli.path,
+        cli.verbose.is_silent(),
+        false,
+        cli.remote,
+        cli.verbose.log_level(),
+        cli.force,
+        false,
+    )
 }
